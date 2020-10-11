@@ -10,12 +10,8 @@
 
 NeuronalNetwork::NeuronalNetwork() 
 {
-	for (int i = 0; i < layers_sizes.size(); ++i) {
-		for (int j = 0; j < layers_sizes[i]; ++j) {
-			if (i == 0) {
-				layer1.emplace_back(new Neuron);
-			}
-		}
+	for (int i = 0; i < std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0); ++i) {
+		neurons.emplace_back(new Neuron);
 	}
 
 	threadpool = new ThreadPool<NeuronThread, NeuronArg, std::unordered_map<Neuron*, double*>>(MAX_THREADS, (int)std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0));
@@ -23,9 +19,9 @@ NeuronalNetwork::NeuronalNetwork()
 
 NeuronalNetwork::~NeuronalNetwork() 
 {
-	for (int m = 0; m < layer1.size(); ++m) {
-		if (layer1[m]) {
-			delete layer1[m];
+	for (int m = 0; m < neurons.size(); ++m) {
+		if (neurons[m]) {
+			delete neurons[m];
 		}
 	}
 	
@@ -44,23 +40,23 @@ NeuronalNetwork::~NeuronalNetwork()
 void NeuronalNetwork::Start() noexcept
 {
 	for (int t = 0; t < duration; ++t) {
-		for (int i = 0; i < layer1.size(); ++i) {
-			if (layer1[i]) {
-				layer1[i]->InjectCurrent(voltage_clamp);
-				threadpool->set_task<Neuron*, double>(layer1[i], dt);
+		for (int n = 0; n < layers_sizes.size(); ++n) {
+			for (int i = ((n == 0) ? 0 : layers_sizes[n-1]); i < layers_sizes[n]; ++i) {
+				if (neurons[i]) {
+					if (n == 0) {
+						neurons[i]->InjectCurrent(voltage_clamp);
+					}
+					threadpool->set_task<Neuron*, double>(neurons[i], dt);
+				}
 			}
-		}
-		threadpool->start();
-		if (!threadpool->stopped() && threadpool->started()) {
+			threadpool->start();
 			threadpool->join();
-			threadpool->clear();
 		}
-		printf("time step %i\n", t);
 	}
 
 	double* voltages;
 	
-	voltages = layer1[0]->GetHistory();
+	voltages = neurons[neurons.size()-1]->GetHistory();
 	
 	for (int i = 0; i < duration; ++i) {
 		printf("%f\n", voltages[i]);
@@ -130,7 +126,7 @@ void* NeuronalNetwork::NeuronThread::run() noexcept
 		arg.neuron->Process(arg.dt);
 	}
 	
-	pthread_exit(NULL);
+	return NULL;
 }
 
 

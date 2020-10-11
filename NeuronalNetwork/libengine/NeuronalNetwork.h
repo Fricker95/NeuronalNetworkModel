@@ -34,7 +34,7 @@ class NeuronalNetwork
 
 	std::vector<std::unordered_map<Neuron*, double*>> network;
 
-	std::vector<Neuron*> layer1;
+	std::vector<Neuron*> neurons;
 
 
 	// mV
