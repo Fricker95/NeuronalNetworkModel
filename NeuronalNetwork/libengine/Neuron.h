@@ -48,8 +48,7 @@ namespace constants
 class Neuron
 {
 	Neuron* postsynaptic = nullptr;
-	// Neuron** neighbors = nullptr;
-	std::vector<Neuron*> neighbors;
+	Neuron** neighbors = nullptr;
 
 	// Vm log
 	double* history = nullptr;

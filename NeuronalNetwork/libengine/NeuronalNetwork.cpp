@@ -45,7 +45,6 @@ void NeuronalNetwork::Start() noexcept
 {
 	for (int t = 0; t < duration; ++t) {
 		for (int i = 0; i < layer1.size(); ++i) {
-			// printf("0x%llx\n", (uint64_t)layer1[i]);
 			if (layer1[i]) {
 				layer1[i]->InjectCurrent(voltage_clamp);
 				threadpool->set_task<Neuron*, double>(layer1[i], dt);
@@ -57,6 +56,14 @@ void NeuronalNetwork::Start() noexcept
 			threadpool->clear();
 		}
 		printf("time step %i\n", t);
+	}
+
+	double* voltages;
+	
+	voltages = layer1[0]->GetHistory();
+	
+	for (int i = 0; i < duration; ++i) {
+		printf("%f\n", voltages[i]);
 	}
 }
 
@@ -112,24 +119,15 @@ void* NeuronalNetwork::NeuronThread::run() noexcept
 
 	while (true) {
 		if (queue->empty()) {
-			// printf("Break\n");
 			break;
 		}
 		
 		pthread_mutex_lock(&s_queue_m);
-		// printf("Queue size = %lu, %i\n", queue->size(), queue->empty());
 		arg = queue->back();
 		queue->pop_back();
 		pthread_mutex_unlock(&s_queue_m);
 		
-		// arg.neuron->Process(arg.dt);
-
-		// printf("0x%llx Done\n", (uint64_t)arg.neuron);
-		
-		// pthread_mutex_lock(&s_result_m);
-		// (*arg.results)[arg.neuron] = arg.neuron->GetHistory();
-		// pthread_mutex_unlock(&s_result_m);
-
+		arg.neuron->Process(arg.dt);
 	}
 	
 	pthread_exit(NULL);

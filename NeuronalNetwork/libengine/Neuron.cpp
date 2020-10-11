@@ -11,22 +11,22 @@
 
 Neuron::Neuron() 
 {
-	// neighbors = new Neuron*[constants::max_neighbors];
-	// history = new double[constants::num_samples];
+	 neighbors = new Neuron*[constants::max_neighbors];
+	 history = new double[constants::num_samples];
 }
 
 Neuron::Neuron(const double oc, const double nc)
 {
-	// neighbors = new Neuron*[constants::max_neighbors];
-	// history = new double[constants::num_samples];
+	 neighbors = new Neuron*[constants::max_neighbors];
+	 history = new double[constants::num_samples];
 	this->oc = oc;
 	this->nc = nc;
 }
 
 Neuron::Neuron(const double Vm, const double n, const double m, const double h)
 {
-	// neighbors = new Neuron*[constants::max_neighbors];
-	// history = new double[constants::num_samples];
+	neighbors = new Neuron*[constants::max_neighbors];
+	history = new double[constants::num_samples];
 	this->Vm = Vm;
 	this->n = n; 
 	this->m = m;
@@ -35,14 +35,12 @@ Neuron::Neuron(const double Vm, const double n, const double m, const double h)
 
 Neuron::~Neuron() 
 {
-	/*
 	if (neighbors) {
 		delete[] neighbors;
 	}
-	*/
-	// if (history) {
-	// 	delete[] history;
-	// }
+	if (history) {
+		delete[] history;
+	}
 }
 
 const double Neuron::Process(const double dt) noexcept
@@ -64,11 +62,10 @@ const void Neuron::AddPostsynapticNeuron(Neuron* postsynaptic) noexcept
 
 const void Neuron::AddNeighbor(Neuron* neighbor) noexcept
 {
-	neighbors.emplace_back(neighbor);
-	// if (neighbors) {
-	// 	neighbors[num_neighbors] = neighbor;
-	// 	num_neighbors++;
-	// }
+	if (neighbors) {
+		neighbors[num_neighbors] = neighbor;
+		num_neighbors++;
+	}
 }
 
 double* Neuron::GetHistory() noexcept
@@ -178,8 +175,8 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 
 	Vm = V_inf + (Vm - V_inf) * exp(- dt / tau_v);
 
-	// history[num_history] = Vm;
-	// num_history++;
+	 history[num_history] = Vm;
+	 num_history++;
 
 	spiked = (Vm >= V_threashold) ? true : false;
 
@@ -187,20 +184,13 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 		postsynaptic->InjectCurrent(oc * spiked);
 	}
 
-	for (int i = 0; i < neighbors.size(); ++i) {
-		if (neighbors[i]) {
-			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
-		}
-	}
-
-
-	// if (neighbors) {
-	// 	for (int i = 0; i < num_neighbors; ++i) {
-	// 		if (neighbors[i]) {
-	// 			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
-	// 		}
-	// 	}
-	// }
+	if (neighbors) {
+	 	for (int i = 0; i < num_neighbors; ++i) {
+	 		if (neighbors[i]) {
+	 			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
+	 		}
+	 	}
+	 }
 	
 	Step(m, Vm, dt, &Neuron::AM, &Neuron::BM);
 	Step(h, Vm, dt, &Neuron::AH, &Neuron::BH);
