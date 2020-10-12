@@ -55,7 +55,7 @@ Neuron::Neuron(Neuron&& other)
 	spiked = other.spiked;
 }
 
-Neuron::~Neuron() 
+Neuron::~Neuron()
 {
 	if (neighbors) {
 		delete[] neighbors;
@@ -231,8 +231,10 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 
 	Vm = V_inf + (Vm - V_inf) * exp(- dt / tau_v);
 
-	history[num_history] = Vm;
-	num_history++;
+	if (history) {
+		history[num_history] = Vm;
+		num_history++;
+	}
 
 	spiked = (Vm >= V_threashold) ? true : false;
 

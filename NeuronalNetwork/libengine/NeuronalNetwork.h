@@ -30,11 +30,11 @@ class NeuronalNetwork
 	class NeuronArg;
 	class NeuronThread;
 
-	std::vector<int> layers_sizes = {16,4,0};
+	std::vector<int> layers_sizes = {16,4,1};
 
 	std::vector<std::unordered_map<Neuron*, double*>> network;
 
-	std::vector<Neuron*> neurons;
+	std::vector<Neuron> neurons;
 
 
 	// mV
