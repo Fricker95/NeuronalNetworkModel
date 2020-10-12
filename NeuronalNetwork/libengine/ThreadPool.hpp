@@ -45,7 +45,7 @@ class ThreadPool {
 		q_.emplace_back(args...);
 	}
 	
-	void start(bool sort = false) noexcept {
+	const void start(bool sort = false) noexcept {
 		progress_ = 0;
 
 		if (threads_.size() < q_.size()) {
@@ -57,14 +57,14 @@ class ThreadPool {
 			threads_[i].start();
 	}
 	
-	void stop() noexcept {
+	const void stop() noexcept {
 		for (size_t i = 0; i < total_; ++i) {
 			if (!threads_[i].stopped() && threads_[i].started())
 				threads_[i].stop();
 		}
 	}
 	
-	void cancel() noexcept {
+	const void cancel() noexcept {
 		for (size_t i = 0; i < total_; ++i)
 			threads_[i].cancel();
 	}
@@ -76,7 +76,7 @@ class ThreadPool {
 		return &results_;
 	}
 
-	bool kill() noexcept {
+	const bool kill() noexcept {
 		bool a = false;
 		for (int i = 0; i < total_; ++i) {
 			a = threads_[i].kill();
@@ -84,19 +84,19 @@ class ThreadPool {
 		return a;
 	}
 	
-	inline size_t size() noexcept {
+	inline const size_t size() noexcept {
 		return q_.size();
 	}
 	
-	inline bool empty() noexcept {
+	inline const bool empty() noexcept {
 		return q_.empty();
 	}
 	
-	inline void clear() noexcept {
+	inline const void clear() noexcept {
 		q_.clear();
 	}
 	
-	inline int progress() noexcept {
+	inline const int progress() noexcept {
 		return progress_;
 	}
 	
@@ -104,7 +104,7 @@ class ThreadPool {
 		return &results_;
 	}
 	
-	bool started() noexcept {
+	const bool started() noexcept {
 		bool did_start = false;
 		for (size_t i = 0; i < total_; ++i) {
 			if (threads_[i].started())
@@ -113,7 +113,7 @@ class ThreadPool {
 		return did_start;
 	}
 	
-	bool stopped() noexcept {
+	const bool stopped() noexcept {
 		bool is_finished = true;
 		for (size_t i = 0; i < total_; ++i) {
 			if (!threads_[i].stopped())
@@ -140,7 +140,7 @@ class ThreadPool {
 			return id_;
 		}
 		
-		void start() {
+		const void start() {
 			stopped_ = false;
 			started_ = true;
 			int status;
@@ -159,11 +159,11 @@ class ThreadPool {
 			}
 		}
 		
-		inline void stop() noexcept {
+		inline const void stop() noexcept {
 			stopped_ = true;
 		}
 		
-		inline void detach() noexcept {
+		inline const void detach() noexcept {
 			detached_ = true;
 		}
 		
@@ -174,31 +174,31 @@ class ThreadPool {
 			return result_;
 		}
 		
-		inline void cancel() noexcept {
+		inline const void cancel() noexcept {
 			// Does not deinit allocated objects in thread, causes memory leak
 			pthread_cancel(id_);
 		}
 		
-		inline bool started() noexcept {
+		inline const bool started() noexcept {
 			return started_;
 		}
 		
-		inline bool stopped() noexcept {
+		inline const bool stopped() noexcept {
 			return stopped_;
 		}
 		
-		inline bool detached() noexcept {
+		inline const bool detached() noexcept {
 			return detached_;
 		}
 
-		inline bool kill() noexcept {
+		inline const bool kill() noexcept {
 			return pthread_kill(id_, 0) != 0;
 		}
 
 	 private:
 		virtual void* run() noexcept = 0;
 		
-		inline void finished() noexcept {
+		inline const void finished() noexcept {
 			stopped_ = true;
 			started_ = false;
 		}
@@ -207,7 +207,7 @@ class ThreadPool {
 		
 		Thread_& operator=(const Thread_& other) = default;
 		
-		static void* launch(void* pVoid) noexcept {
+		inline static void* launch(void* pVoid) noexcept {
 			Thread_* pthread = reinterpret_cast<Thread_*>(pVoid);
 			if (pthread) {
 				pthread->result_ = pthread->run();

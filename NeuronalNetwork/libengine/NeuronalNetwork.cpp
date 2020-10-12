@@ -55,11 +55,13 @@ NeuronalNetwork::~NeuronalNetwork()
 	}
 }
 
-void NeuronalNetwork::Start() noexcept
+const void NeuronalNetwork::Start() noexcept
 {
+	std::chrono::time_point<std::chrono::system_clock> start, end;
 	int count = 0;
 	int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
 	for (int t = 0; t < duration; ++t) {
+		start = std::chrono::system_clock::now();
 		for (int i = 0; i < layers_sizes.size(); i++) {
 			count += layers_sizes[i];
 			int branchless = ((i == 0) ? 0 : (i == layers_sizes.size() - 1) ? sum_neurons - layers_sizes.back() : layers_sizes[i - 1]);
@@ -72,28 +74,44 @@ void NeuronalNetwork::Start() noexcept
 			threadpool->start();
 			threadpool->join();
 		}
+		
+		if (t % 10 == 0) {
+			end = std::chrono::system_clock::now();
+			
+			std::chrono::duration<double> elapsed_seconds = end - start;
+			std::cout << "time step: " << t << ", elapsed time: " << elapsed_seconds.count() << "s\n";
+		}
 	}
 
-	double* voltages;
+	std::vector<double> voltages;
 	
-	voltages = neurons[neurons.size() - 1].GetHistory();
+	voltages = std::move(neurons[neurons.size() - 1].GetHistory());
+	
+	double c = 0;
 	
 	for (int i = 0; i < duration; ++i) {
-		printf("%f\n", voltages[i]);
+		if (voltages[i] >= -55.0) {
+			c++;
+		}
 	}
+	
+	c /= duration;
+	
+	printf("%f%%\n", c * 100);
+	
 }
 
-void NeuronalNetwork::Stop() noexcept {
+const void NeuronalNetwork::Stop() noexcept {
 	threadpool->stop();
 	threadpool->clear();
 }
 
-void NeuronalNetwork::Cancel() noexcept {
+const void NeuronalNetwork::Cancel() noexcept {
 	threadpool->cancel();
 	Stop();
 }
 
-bool NeuronalNetwork::Stopped() noexcept {
+const bool NeuronalNetwork::Stopped() noexcept {
 	return threadpool->stopped();
 }
 

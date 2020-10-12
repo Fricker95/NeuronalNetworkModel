@@ -37,6 +37,7 @@
 		EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NeuronalNetwork.cpp; sourceTree = "<group>"; };
 		EA1C15902533138A00DBE69C /* Neuron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Neuron.h; sourceTree = "<group>"; };
 		EA1C159B2533142400DBE69C /* liblibengine.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liblibengine.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA1C15C825349FCB00DBE69C /* constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = constants.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +94,7 @@
 				EA1C158D2533138A00DBE69C /* ThreadPool.hpp */,
 				EA1C158E2533138A00DBE69C /* NeuronalNetwork.h */,
 				EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */,
+				EA1C15C825349FCB00DBE69C /* constants.h */,
 			);
 			path = libengine;
 			sourceTree = "<group>";

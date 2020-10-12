@@ -9,16 +9,24 @@
 
 #include "Neuron.h"
 
-Neuron::Neuron() {}
+Neuron::Neuron()
+{
+	neighbors.reserve(constants::max_neighbors);
+	history.reserve(constants::num_samples);
+}
 
 Neuron::Neuron(const double oc, const double nc)
 {
+	neighbors.reserve(constants::max_neighbors);
+	history.reserve(constants::num_samples);
 	this->oc = oc;
 	this->nc = nc;
 }
 
 Neuron::Neuron(const double Vm, const double n, const double m, const double h)
 {
+	neighbors.reserve(constants::max_neighbors);
+	history.reserve(constants::num_samples);
 	this->Vm = Vm;
 	this->n = n; 
 	this->m = m;
@@ -29,41 +37,23 @@ Neuron::Neuron(Neuron&& other)
 {
 	Isum = other.Isum.load();
 	
-	postsynaptic = other.postsynaptic;
+	postsynaptic = std::move(other.postsynaptic);
 	
-	num_neighbors = other.num_neighbors;
-	if (other.neighbors) {
-		for (int i = 0; i < num_neighbors; ++i) {
-			neighbors[i] = other.neighbors[i];
-		}
-	}
+	neighbors = std::move(other.neighbors);
 	
-	num_history = other.num_history;
-	if (other.history) {
-		for (int i = 0; i < num_history; ++i) {
-			history[i] = other.history[i];
-		}
-	}
+	history = std::move(other.history);
 	
-	n = other.n;
-	m = other.m;
-	h = other.h;
+	n = std::move(other.n);
+	m = std::move(other.m);
+	h = std::move(other.h);
 	
-	oc = other.oc;
-	nc = other.nc;
+	oc = std::move(other.oc);
+	nc = std::move(other.nc);
 	
-	spiked = other.spiked;
+	spiked = std::move(other.spiked);
 }
 
-Neuron::~Neuron()
-{
-	if (neighbors) {
-		delete[] neighbors;
-	}
-	if (history) {
-		delete[] history;
-	}
-}
+Neuron::~Neuron() {}
 
 Neuron& Neuron::operator=(const Neuron& other)
 {
@@ -72,18 +62,15 @@ Neuron& Neuron::operator=(const Neuron& other)
 		
 		postsynaptic = other.postsynaptic;
 		
-		num_neighbors = other.num_neighbors;
-		if (other.neighbors) {
-			for (int i = 0; i < num_neighbors; ++i) {
-				neighbors[i] = other.neighbors[i];
-			}
+		neighbors.clear();
+		for (int i = 0; i < other.neighbors.size(); i++) {
+			neighbors.emplace_back(other.neighbors[i]);
 		}
 		
-		num_history = other.num_history;
-		if (other.history) {
-			for (int i = 0; i < num_history; ++i) {
-				history[i] = other.history[i];
-			}
+		history.clear();
+		
+		for (int i = 0; i < other.history.size(); i++) {
+			history.emplace_back(other.history[i]);
 		}
 		
 		n = other.n;
@@ -118,20 +105,17 @@ const void Neuron::AddPostsynapticNeuron(Neuron* postsynaptic) noexcept
 
 const void Neuron::AddNeighbor(Neuron* neighbor) noexcept
 {
-	if (neighbors) {
-		neighbors[num_neighbors] = neighbor;
-		num_neighbors++;
-	}
+	neighbors.emplace_back(neighbor);
 }
 
-double* Neuron::GetHistory() noexcept
+std::vector<double>& Neuron::GetHistory() noexcept
 {
 	return history;
 }
 
 const size_t Neuron::GetHistorySize() noexcept
 {
-	return num_history;
+	return history.size();
 }
 
 const bool Neuron::IsInhibitory() noexcept
@@ -231,10 +215,7 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 
 	Vm = V_inf + (Vm - V_inf) * exp(- dt / tau_v);
 
-	if (history) {
-		history[num_history] = Vm;
-		num_history++;
-	}
+	history.emplace_back(Vm);
 
 	spiked = (Vm >= V_threashold) ? true : false;
 
@@ -242,13 +223,11 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 		postsynaptic->InjectCurrent(oc * spiked);
 	}
 
-	if (neighbors) {
-	 	for (int i = 0; i < num_neighbors; ++i) {
-	 		if (neighbors[i]) {
-	 			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
-	 		}
-	 	}
-	 }
+	for (int i = 0; i < neighbors.size(); i++) {
+		if (neighbors[i]) {
+			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
+		}
+	}
 	
 	Step(m, Vm, dt, &Neuron::AM, &Neuron::BM);
 	Step(h, Vm, dt, &Neuron::AH, &Neuron::BH);

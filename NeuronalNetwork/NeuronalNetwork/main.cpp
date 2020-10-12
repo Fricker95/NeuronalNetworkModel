@@ -16,7 +16,7 @@ int main(int argc, const char * argv[]) {
 	start = std::chrono::system_clock::now();
 	
 	NeuronalNetwork n;
-		
+
 	n.Start();
 	
 	end = std::chrono::system_clock::now();

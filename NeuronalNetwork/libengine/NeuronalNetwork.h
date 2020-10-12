@@ -23,14 +23,14 @@
 
 #include <pthread.h>
 
-#define MAX_THREADS 10
+#define MAX_THREADS 16
 
 class NeuronalNetwork
 {
 	class NeuronArg;
 	class NeuronThread;
 
-	std::vector<int> layers_sizes = {16,4,1};
+	std::vector<int> layers_sizes = {1024,256,64,16,4,1};
 
 	std::vector<std::unordered_map<Neuron*, double*>> network;
 
@@ -38,13 +38,12 @@ class NeuronalNetwork
 
 
 	// mV
-	double voltage_clamp = 0.451;
+	const double voltage_clamp = 0.451;
 
-	double dt = 0.01;
+	const double dt = 0.01;
 
 	// µs
-	int duration = 10000;
-
+	const int duration = 10000;
 
 	inline static ThreadPool<NeuronThread, NeuronArg, std::unordered_map<Neuron*, double*>>* threadpool = nullptr;
 
@@ -55,11 +54,11 @@ public:
 	explicit NeuronalNetwork();
 	~NeuronalNetwork();
 
-	void Start() noexcept;
-	void Stop() noexcept;
-	void Cancel() noexcept;
+	const void Start() noexcept;
+	const void Stop() noexcept;
+	const void Cancel() noexcept;
 
-	static bool Stopped() noexcept;
+	static const  bool Stopped() noexcept;
 
 	static pthread_mutex_t* ResultMutex() noexcept;
 	static pthread_mutex_t* QueueMutex() noexcept;
@@ -73,7 +72,7 @@ private:
 
 	public:
 		NeuronArg();
-		NeuronArg(Neuron* neuron, double dt);
+		NeuronArg(Neuron* neuron, const double dt);
 		NeuronArg(NeuronArg&& other);
 		~NeuronArg();
 
