@@ -23,14 +23,14 @@
 
 #include <pthread.h>
 
-#define MAX_THREADS 1
+#define MAX_THREADS 10
 
 class NeuronalNetwork
 {
 	class NeuronArg;
 	class NeuronThread;
 
-	std::vector<int> layers_sizes = {16,4,1};
+	std::vector<int> layers_sizes = {16,4,0};
 
 	std::vector<std::unordered_map<Neuron*, double*>> network;
 

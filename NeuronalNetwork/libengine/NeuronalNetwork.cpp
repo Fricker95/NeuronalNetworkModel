@@ -10,16 +10,43 @@
 
 NeuronalNetwork::NeuronalNetwork() 
 {
-	for (int i = 0; i < std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0); ++i) {
+	int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
+	for (int i = 0; i < sum_neurons; i++) {
 		neurons.emplace_back(new Neuron);
 	}
+	
+	for (int n = 0; n < layers_sizes.size(); n++) {
+		if (n) {
+			layers_sizes[n] += layers_sizes[n-1];
+		}
+	}
+	
+	for (int n = 0; n < layers_sizes.size(); n++) {
+		for (int i = (n == 0) ? 0 : layers_sizes[n-1]; i < layers_sizes[n]; i++) {
+			for (int j = (n == 0) ? 0 : layers_sizes[n-1]; j < layers_sizes[n]; j++) {
+				if (i != j) {
+					if (neurons[i]) {
+						neurons[i]->AddNeighbor(neurons[j]);
+					}
+				}
+			}
+		}
+	}
+	
+	for (int i = 0; i < layers_sizes.size() - 1; ++i) {
+		for (int j = (i == 0) ? 0 : layers_sizes[i-1]; j < layers_sizes[i]; ++j) {
+			for (int m = layers_sizes[i]; m < layers_sizes[i+1]; ++m) {
+				neurons[j]->AddPostsynapticNeuron(neurons[m]);
+			}
+		}
+	}
 
-	threadpool = new ThreadPool<NeuronThread, NeuronArg, std::unordered_map<Neuron*, double*>>(MAX_THREADS, (int)std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0));
+	threadpool = new ThreadPool<NeuronThread, NeuronArg, std::unordered_map<Neuron*, double*>>(MAX_THREADS, sum_neurons);
 }
 
 NeuronalNetwork::~NeuronalNetwork() 
 {
-	for (int m = 0; m < neurons.size(); ++m) {
+	for (int m = 0; m < neurons.size(); m++) {
 		if (neurons[m]) {
 			delete neurons[m];
 		}
@@ -41,7 +68,7 @@ void NeuronalNetwork::Start() noexcept
 {
 	for (int t = 0; t < duration; ++t) {
 		for (int n = 0; n < layers_sizes.size(); ++n) {
-			for (int i = ((n == 0) ? 0 : layers_sizes[n-1]); i < layers_sizes[n]; ++i) {
+			for (int i = (n == 0) ? 0 : layers_sizes[n-1]; i < layers_sizes[n]; ++i) {
 				if (neurons[i]) {
 					if (n == 0) {
 						neurons[i]->InjectCurrent(voltage_clamp);

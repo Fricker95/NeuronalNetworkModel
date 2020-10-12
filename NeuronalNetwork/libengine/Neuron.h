@@ -42,19 +42,18 @@ namespace constants
 	constexpr const double leak_conductance = GL * membrane_surface * 1e-8;  // leak conductance [mS]
 
 	constexpr const int max_neighbors = 100;
-	constexpr const int max_num_syn = 100;
 }
 
 class Neuron
 {
 	Neuron* postsynaptic = nullptr;
-	Neuron** neighbors = nullptr;
+	Neuron** neighbors = new Neuron*[constants::max_neighbors];
 
 	// Vm log
-	double* history = nullptr;
+	double* history = new double[constants::num_samples];
 
 	// atomic input current sum [µA]
-	std::atomic<double> Isum{0};
+	std::atomic<double> Isum = 0;
 
 	// membrane potential [mV]
 	double Vm = -64.9964;
@@ -76,10 +75,10 @@ class Neuron
 	double nc = 0.01;
 
 	// neighbors neurons size
-	unsigned int num_neighbors = 0;
+	size_t num_neighbors = 0;
 	
 	// Vm log size
-	unsigned int num_history = 0;
+	size_t num_history = 0;
 
 	bool spiked = false;
 
@@ -99,9 +98,10 @@ public:
 	Neuron();
 	Neuron(const double oc, const double nc);
 	Neuron(const double Vm, const double n, const double m, const double h);
-	Neuron(const Neuron& other);
 	Neuron(Neuron&& other);
 	~Neuron();
+	
+	Neuron& operator=(const Neuron& other);
 
 	const double Process(const double dt) noexcept;
 	const void InjectCurrent(const double input) noexcept;
@@ -110,7 +110,7 @@ public:
 	const void AddNeighbor(Neuron* neighbor) noexcept;
 
 	double* GetHistory() noexcept;
-	const int GetHistorySize() noexcept;
+	const size_t GetHistorySize() noexcept;
 
 	const bool IsInhibitory() noexcept;
 	const bool IsExhitatory() noexcept;

@@ -9,28 +9,50 @@
 
 #include "Neuron.h"
 
-Neuron::Neuron() 
-{
-	 neighbors = new Neuron*[constants::max_neighbors];
-	 history = new double[constants::num_samples];
-}
+Neuron::Neuron() {}
 
 Neuron::Neuron(const double oc, const double nc)
 {
-	 neighbors = new Neuron*[constants::max_neighbors];
-	 history = new double[constants::num_samples];
 	this->oc = oc;
 	this->nc = nc;
 }
 
 Neuron::Neuron(const double Vm, const double n, const double m, const double h)
 {
-	neighbors = new Neuron*[constants::max_neighbors];
-	history = new double[constants::num_samples];
 	this->Vm = Vm;
 	this->n = n; 
 	this->m = m;
 	this->h = h;
+}
+
+Neuron::Neuron(Neuron&& other)
+{
+	Isum = other.Isum.load();
+	
+	postsynaptic = other.postsynaptic;
+	
+	num_neighbors = other.num_neighbors;
+	if (other.neighbors) {
+		for (int i = 0; i < num_neighbors; ++i) {
+			neighbors[i] = other.neighbors[i];
+		}
+	}
+	
+	num_history = other.num_history;
+	if (other.history) {
+		for (int i = 0; i < num_history; ++i) {
+			history[i] = other.history[i];
+		}
+	}
+	
+	n = other.n;
+	m = other.m;
+	h = other.h;
+	
+	oc = other.oc;
+	nc = other.nc;
+	
+	spiked = other.spiked;
 }
 
 Neuron::~Neuron() 
@@ -43,10 +65,44 @@ Neuron::~Neuron()
 	}
 }
 
+Neuron& Neuron::operator=(const Neuron& other)
+{
+	if (this != &other) {
+		Isum = other.Isum.load();
+		
+		postsynaptic = other.postsynaptic;
+		
+		num_neighbors = other.num_neighbors;
+		if (other.neighbors) {
+			for (int i = 0; i < num_neighbors; ++i) {
+				neighbors[i] = other.neighbors[i];
+			}
+		}
+		
+		num_history = other.num_history;
+		if (other.history) {
+			for (int i = 0; i < num_history; ++i) {
+				history[i] = other.history[i];
+			}
+		}
+		
+		n = other.n;
+		m = other.m;
+		h = other.h;
+		
+		oc = other.oc;
+		nc = other.nc;
+		
+		spiked = other.spiked;
+	}
+	
+	return *this;
+}
+
 const double Neuron::Process(const double dt) noexcept
 {
 	double Ic = Isum.load();
-	Isum.store(0);
+	Isum = 0;
 	return HodgkinHuxley(dt, Ic);
 }
 
@@ -73,7 +129,7 @@ double* Neuron::GetHistory() noexcept
 	return history;
 }
 
-const int Neuron::GetHistorySize() noexcept
+const size_t Neuron::GetHistorySize() noexcept
 {
 	return num_history;
 }
@@ -175,8 +231,8 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 
 	Vm = V_inf + (Vm - V_inf) * exp(- dt / tau_v);
 
-	 history[num_history] = Vm;
-	 num_history++;
+	history[num_history] = Vm;
+	num_history++;
 
 	spiked = (Vm >= V_threashold) ? true : false;
 
