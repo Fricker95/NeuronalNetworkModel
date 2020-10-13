@@ -38,6 +38,12 @@ namespace constants
 	constexpr const int max_neighbors = 10000;
 }
 
+inline const double Rand(const double min, const double max)
+{
+	const double f = (double)rand() / RAND_MAX;
+	return min + f * (max - min);
+}
+
 #pragma GCC visibility pop
 
 #endif /* constants_h */

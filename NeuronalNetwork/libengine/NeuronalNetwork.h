@@ -30,12 +30,11 @@ class NeuronalNetwork
 	class NeuronArg;
 	class NeuronThread;
 
-	std::vector<int> layers_sizes = {1024,256,64,16,4,1};
+	std::vector<int> layers_sizes = {4096,1024,256,64,16,4,1};
 
 	std::vector<std::unordered_map<Neuron*, double*>> network;
 
 	std::vector<Neuron> neurons;
-
 
 	// mV
 	const double voltage_clamp = 0.451;
@@ -54,7 +53,7 @@ public:
 	explicit NeuronalNetwork();
 	~NeuronalNetwork();
 
-	const void Start() noexcept;
+	std::vector<double> Start() noexcept;
 	const void Stop() noexcept;
 	const void Cancel() noexcept;
 

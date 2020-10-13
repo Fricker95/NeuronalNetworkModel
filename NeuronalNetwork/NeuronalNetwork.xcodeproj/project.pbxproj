@@ -13,7 +13,8 @@
 		EA1C15AC2533148100DBE69C /* NeuronalNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = EA1C158E2533138A00DBE69C /* NeuronalNetwork.h */; };
 		EA1C15AF253314A100DBE69C /* NeuronalNetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */; };
 		EA1C15B0253314A100DBE69C /* Neuron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EA1C158C2533138A00DBE69C /* Neuron.cpp */; };
-		EA1C15BD253315AD00DBE69C /* liblibengine.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EA1C159B2533142400DBE69C /* liblibengine.dylib */; };
+		EA1C15BD253315AD00DBE69C /* libengine.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EA1C159B2533142400DBE69C /* libengine.dylib */; };
+		EA1C15D52534D3C600DBE69C /* PythonWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EA1C15CC2534D0EB00DBE69C /* PythonWrapper.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,8 +37,11 @@
 		EA1C158E2533138A00DBE69C /* NeuronalNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NeuronalNetwork.h; sourceTree = "<group>"; };
 		EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NeuronalNetwork.cpp; sourceTree = "<group>"; };
 		EA1C15902533138A00DBE69C /* Neuron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Neuron.h; sourceTree = "<group>"; };
-		EA1C159B2533142400DBE69C /* liblibengine.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liblibengine.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA1C159B2533142400DBE69C /* libengine.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libengine.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA1C15C825349FCB00DBE69C /* constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = constants.h; sourceTree = "<group>"; };
+		EA1C15CB2534D0EB00DBE69C /* PythonWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PythonWrapper.h; sourceTree = "<group>"; };
+		EA1C15CC2534D0EB00DBE69C /* PythonWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PythonWrapper.cpp; sourceTree = "<group>"; };
+		EA1C15CD2534D0EB00DBE69C /* test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = test.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,7 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EA1C15BD253315AD00DBE69C /* liblibengine.dylib in Frameworks */,
+				EA1C15BD253315AD00DBE69C /* libengine.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,7 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				EA1C15812533135900DBE69C /* NeuronalNetwork */,
-				EA1C159B2533142400DBE69C /* liblibengine.dylib */,
+				EA1C159B2533142400DBE69C /* libengine.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,7 +84,7 @@
 		EA1C15832533135900DBE69C /* NeuronalNetwork */ = {
 			isa = PBXGroup;
 			children = (
-				EA1C15A82533143400DBE69C /* src */,
+				EA1C15CD2534D0EB00DBE69C /* test.py */,
 				EA1C15842533135900DBE69C /* main.cpp */,
 			);
 			path = NeuronalNetwork;
@@ -89,21 +93,16 @@
 		EA1C159C2533142400DBE69C /* libengine */ = {
 			isa = PBXGroup;
 			children = (
+				EA1C15C825349FCB00DBE69C /* constants.h */,
 				EA1C15902533138A00DBE69C /* Neuron.h */,
 				EA1C158C2533138A00DBE69C /* Neuron.cpp */,
 				EA1C158D2533138A00DBE69C /* ThreadPool.hpp */,
 				EA1C158E2533138A00DBE69C /* NeuronalNetwork.h */,
 				EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */,
-				EA1C15C825349FCB00DBE69C /* constants.h */,
+				EA1C15CC2534D0EB00DBE69C /* PythonWrapper.cpp */,
+				EA1C15CB2534D0EB00DBE69C /* PythonWrapper.h */,
 			);
 			path = libengine;
-			sourceTree = "<group>";
-		};
-		EA1C15A82533143400DBE69C /* src */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,9 +138,9 @@
 			productReference = EA1C15812533135900DBE69C /* NeuronalNetwork */;
 			productType = "com.apple.product-type.tool";
 		};
-		EA1C159A2533142400DBE69C /* libengine */ = {
+		EA1C159A2533142400DBE69C /* engine */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EA1C15A32533142400DBE69C /* Build configuration list for PBXNativeTarget "libengine" */;
+			buildConfigurationList = EA1C15A32533142400DBE69C /* Build configuration list for PBXNativeTarget "engine" */;
 			buildPhases = (
 				EA1C15972533142400DBE69C /* Headers */,
 				EA1C15982533142400DBE69C /* Sources */,
@@ -151,9 +150,9 @@
 			);
 			dependencies = (
 			);
-			name = libengine;
+			name = engine;
 			productName = libengine;
-			productReference = EA1C159B2533142400DBE69C /* liblibengine.dylib */;
+			productReference = EA1C159B2533142400DBE69C /* libengine.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +185,7 @@
 			projectRoot = "";
 			targets = (
 				EA1C15802533135900DBE69C /* NeuronalNetwork */,
-				EA1C159A2533142400DBE69C /* libengine */,
+				EA1C159A2533142400DBE69C /* engine */,
 			);
 		};
 /* End PBXProject section */
@@ -205,6 +204,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EA1C15AF253314A100DBE69C /* NeuronalNetwork.cpp in Sources */,
+				EA1C15D52534D3C600DBE69C /* PythonWrapper.cpp in Sources */,
 				EA1C15B0253314A100DBE69C /* Neuron.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -410,7 +410,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EA1C15A32533142400DBE69C /* Build configuration list for PBXNativeTarget "libengine" */ = {
+		EA1C15A32533142400DBE69C /* Build configuration list for PBXNativeTarget "engine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EA1C15A42533142400DBE69C /* Debug */,

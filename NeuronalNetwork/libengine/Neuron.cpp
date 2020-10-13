@@ -38,9 +38,7 @@ Neuron::Neuron(Neuron&& other)
 	Isum = other.Isum.load();
 	
 	postsynaptic = std::move(other.postsynaptic);
-	
 	neighbors = std::move(other.neighbors);
-	
 	history = std::move(other.history);
 	
 	n = std::move(other.n);
@@ -88,7 +86,7 @@ Neuron& Neuron::operator=(const Neuron& other)
 
 const double Neuron::Process(const double dt) noexcept
 {
-	double Ic = Isum.load();
+	const double Ic = Isum.load();
 	Isum = 0;
 	return HodgkinHuxley(dt, Ic);
 }
