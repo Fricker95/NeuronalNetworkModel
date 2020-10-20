@@ -21,11 +21,13 @@
 
 class Neuron
 {
+	// array of neighboring neurons pointer
 	std::vector<Neuron*> neighbors;
 
 	// Vm log
 	std::vector<double> history;
 	
+	// pointer to postsynaptic neuron
 	Neuron* postsynaptic = nullptr;
 
 	// atomic input current sum [µA]
@@ -35,7 +37,7 @@ class Neuron
 	double Vm = -64.9964;
 
 	// [uF/cm^2] membrane capacitance density
-	// double Cm = 0.01;
+	double Cm = 0.01;
 
 	// potassium channel activation conductance
 	double n = 0.3177; 
@@ -49,25 +51,28 @@ class Neuron
 
 	// neighbor current increase [µA]
 	double nc = 0.01;
-
+	
+	// boolean indicate of cell state
 	bool spiked = false;
 
+	// static membrane resting potential
 	inline constexpr static const double V_rest = -64.9964;
+	// static membrane threashold potential
 	inline constexpr static const double V_threashold = -55.0;
-
+	
+	// ion channel current constants
 	inline constexpr static const double GNa = 1.20;
 	inline constexpr static const double GK = 0.36;
 	inline constexpr static const double GL = 0.003;
+	// ion channel potential constants
 	inline constexpr static const double ENa = 50.0;
 	inline constexpr static const double EK = -77.0;
 	inline constexpr static const double EL = -54.4;
 
-	constexpr static const unsigned int max_neighbors = 100;
-
 public:
 	Neuron();
 	Neuron(const double oc, const double nc);
-	Neuron(const double Vm, const double n, const double m, const double h);
+	Neuron(const double Vm, const double Cm, const double n, const double m, const double h);
 	Neuron(Neuron&& other);
 	~Neuron();
 	
@@ -78,6 +83,7 @@ public:
 
 	const void AddPostsynapticNeuron(Neuron* next) noexcept;
 	const void AddNeighbor(Neuron* neighbor) noexcept;
+	const void SetMembraneCapacitance(const double Cm) noexcept;
 
 	std::vector<double>& GetHistory() noexcept;
 	const size_t GetHistorySize() noexcept;
@@ -108,3 +114,19 @@ private:
 #endif /* Neuron_ */
 
 
+
+// [um^2] surface area of the membrane
+//  inline constexpr static const double membrane_surface = 4000.0;
+// [uF/cm^2] membrane capacitance density
+//  inline constexpr static const double membrane_capacitance_density = 0.01;
+// [uF] membrane capacitance
+//  inline constexpr static const double membrane_capacitance = membrane_capacitance_density * membrane_surface * 1e-8;
+
+/*
+ // Na conductance [mS]
+ inline constexpr static const double sodium_conductance = GNa * membrane_surface * 1e-8;
+ // K conductance [mS]
+ inline constexpr static const double potassium_conductance = GK * membrane_surface * 1e-8;
+ // leak conductance [mS]
+ inline constexpr static const double leak_conductance = GL * membrane_surface * 1e-8;
+ */

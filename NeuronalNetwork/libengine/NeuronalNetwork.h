@@ -12,7 +12,6 @@
 #pragma GCC visibility push(default)
 
 #include "Neuron.h"
-
 #include "ThreadPool.hpp"
 
 #include <iostream>
@@ -27,30 +26,33 @@
 
 class NeuronalNetwork
 {
+	// forward declaration of argument class
 	class NeuronArg;
+	// forward delcaration of thread class
 	class NeuronThread;
-
-	std::vector<int> layers_sizes = {4096,1024,256,64,16,4,1};
-
-	std::vector<std::unordered_map<Neuron*, double*>> network;
-
+	
+	// size of layers
+	std::vector<int> layers_sizes;
+	
+	// array of neurons in entire system
 	std::vector<Neuron> neurons;
-
-	// mV
-	const double voltage_clamp = 0.451;
-
-	const double dt = 0.01;
-
-	// µs
-	const int duration = 10000;
-
-	inline static ThreadPool<NeuronThread, NeuronArg, std::unordered_map<Neuron*, double*>>* threadpool = nullptr;
-
+	
+	// static threadpool pointer
+	inline static ThreadPool<NeuronThread, NeuronArg, void*>* threadpool = nullptr;
+	
+	// static mutexes
 	inline static pthread_mutex_t s_queue_m = PTHREAD_MUTEX_INITIALIZER;
 	inline static pthread_mutex_t s_result_m = PTHREAD_MUTEX_INITIALIZER;
+	
+	// mV
+	inline constexpr static const double voltage_clamp = 0.451;
+	// µs time step;
+	inline constexpr static const double dt = 0.01;
 
 public:
-	explicit NeuronalNetwork();
+	NeuronalNetwork();
+	NeuronalNetwork(std::vector<int> layers);
+	NeuronalNetwork(std::initializer_list<int> layers);
 	~NeuronalNetwork();
 
 	std::vector<double> Start() noexcept;
@@ -63,10 +65,14 @@ public:
 	static pthread_mutex_t* QueueMutex() noexcept;
 
 private:
+	const void Initialize(int sum_neurons) noexcept;
+	
 	class NeuronArg
 	{
 	public:
+		// Neuron pointer
 		Neuron* neuron = nullptr;
+		// delta time
 		double dt = 0;
 
 	public:
@@ -81,8 +87,11 @@ private:
 
 	class NeuronThread: public ThreadPool<NeuronThread, NeuronArg, void*>::Thread_
 	{
+		// queue pointer of arguments
 		std::vector<NeuronArg>* queue = nullptr;
+		// result pointer (unused in this case)
 		void* results = nullptr;
+		// atomic count pointer
 		std::atomic<int>* count = nullptr;
 
 	public:

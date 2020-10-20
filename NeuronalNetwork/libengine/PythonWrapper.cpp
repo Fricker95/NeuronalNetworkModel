@@ -6,7 +6,7 @@ const double* run(const double x, const double dt, const int size)
 	
 	start = std::chrono::system_clock::now();
 	
-	NeuronalNetwork n;
+	NeuronalNetwork n({256,64,16,4,1});
 	
 	std::vector<double> result = n.Start();
 	

@@ -52,14 +52,13 @@ def plot_multiple_V_vs_t(Vs, I, t, dt, arr = [16,4,1]):
 	ani = animation.FuncAnimation(fig, animate, len(t)//100, fargs=[Vs, t, lines], interval=200, blit=False)
 	ani.save('test.gif')
 	# plt.show()
-
 def plot_V_vs_t(Vs, I, t, dt):
 	plt.plot(t*dt, Vs)
 	plt.grid()
 	plt.title('Voltage vs Time for I=%f $\mu$A'%I)
 	plt.xlabel('time in msec')
 	plt.ylabel('Voltage in mV')
-	plt.yticks([-55, 0])
+	plt.yticks([-65, -55, 0, 20])
 	plt.ylim(-90, 50)
 	plt.xticks([x for x in range(0,100,5)])
 	plt.show()
