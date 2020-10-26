@@ -47,7 +47,7 @@ class Neuron
 	double oc_ = 0.01;
 
 	// neighbor current increase [µA]
-	double nc_ = 0.01;
+	double nc_ = 0.001;
 	
 	neuron_id_t id_;
 	
