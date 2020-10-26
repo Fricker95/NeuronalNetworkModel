@@ -24,6 +24,8 @@
 
 #define MAX_THREADS 16
 
+const double Rand(const double min, const double max);
+
 class NeuronalNetwork
 {
 	// forward declaration of argument class
@@ -45,9 +47,13 @@ class NeuronalNetwork
 	inline static pthread_mutex_t s_result_m = PTHREAD_MUTEX_INITIALIZER;
 	
 	// mV
-	inline constexpr static const double voltage_clamp = 0.451;
+	inline static double voltage_clamp = 0.451;
 	// µs time step;
-	inline constexpr static const double dt = 0.01;
+	inline static double dt = 0.01;
+	// number of bins, num_bins * dt = µs
+	inline static int num_bins = 10000;
+	// number of neighboring neurons
+	inline static int max_neighbors = 10000;
 
 public:
 	NeuronalNetwork();
@@ -55,12 +61,18 @@ public:
 	NeuronalNetwork(std::initializer_list<int> layers);
 	~NeuronalNetwork();
 
-	std::vector<double> Start() noexcept;
+	const void Start() noexcept;
 	const void Stop() noexcept;
 	const void Cancel() noexcept;
+	
+	std::vector<Neuron>& GetNeurons() noexcept;
 
-	static const  bool Stopped() noexcept;
+	static const bool Stopped() noexcept;
 
+	static const void SetVoltageClamp(const double vc) noexcept;
+	static const void SetDeltaTime(const double dt) noexcept;
+	static const void SetNumBins(const int nb) noexcept;
+	static const void SetMaxNeighbors(const int mn) noexcept;
 	static pthread_mutex_t* ResultMutex() noexcept;
 	static pthread_mutex_t* QueueMutex() noexcept;
 
@@ -102,8 +114,17 @@ private:
 		void* run() noexcept;
 		
 	};
-	
 };
+
+inline const double Rand(const double min, const double max)
+{
+	/*
+	 Random function
+	 return a double within the min and max
+	 */
+	const double f = (double)rand() / RAND_MAX;
+	return min + f * (max - min);
+}
 
 #pragma GCC visibility pop
 #endif /* NeuronalNetwork_ */

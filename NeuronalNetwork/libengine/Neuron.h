@@ -17,8 +17,6 @@
 #include <cmath>
 #include <vector>
 
-#include "constants.h"
-
 class Neuron
 {
 	// array of neighboring neurons pointer
@@ -70,9 +68,9 @@ class Neuron
 	inline constexpr static const double EL = -54.4;
 
 public:
-	Neuron();
-	Neuron(const double oc, const double nc);
-	Neuron(const double Vm, const double Cm, const double n, const double m, const double h);
+	Neuron(const int num_bins = 10000, const int max_neighbors = 10000);
+	Neuron(const double oc, const double nc, const int num_bins = 10000, const int max_neighbors = 10000);
+	Neuron(const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins = 10000, const int max_neighbors = 10000);
 	Neuron(Neuron&& other);
 	~Neuron();
 	

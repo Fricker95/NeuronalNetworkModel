@@ -38,7 +38,6 @@
 		EA1C158F2533138A00DBE69C /* NeuronalNetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NeuronalNetwork.cpp; sourceTree = "<group>"; };
 		EA1C15902533138A00DBE69C /* Neuron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Neuron.h; sourceTree = "<group>"; };
 		EA1C159B2533142400DBE69C /* libengine.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libengine.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		EA1C15C825349FCB00DBE69C /* constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = constants.h; sourceTree = "<group>"; };
 		EA1C15CB2534D0EB00DBE69C /* PythonWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PythonWrapper.h; sourceTree = "<group>"; };
 		EA1C15CC2534D0EB00DBE69C /* PythonWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PythonWrapper.cpp; sourceTree = "<group>"; };
 		EA1C15CD2534D0EB00DBE69C /* test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = test.py; sourceTree = "<group>"; };
@@ -93,7 +92,6 @@
 		EA1C159C2533142400DBE69C /* libengine */ = {
 			isa = PBXGroup;
 			children = (
-				EA1C15C825349FCB00DBE69C /* constants.h */,
 				EA1C15902533138A00DBE69C /* Neuron.h */,
 				EA1C158C2533138A00DBE69C /* Neuron.cpp */,
 				EA1C158D2533138A00DBE69C /* ThreadPool.hpp */,
@@ -161,7 +159,7 @@
 		EA1C15792533135900DBE69C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					EA1C15802533135900DBE69C = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -327,6 +325,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J5D439Q4XS;
@@ -340,6 +339,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = J5D439Q4XS;

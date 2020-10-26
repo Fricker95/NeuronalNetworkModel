@@ -9,24 +9,24 @@
 
 #include "Neuron.h"
 
-Neuron::Neuron()
+Neuron::Neuron(const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(constants::num_neighbors);
-	history.reserve(constants::num_bins);
+	neighbors.reserve(max_neighbors);
+	history.reserve(num_bins);
 }
 
-Neuron::Neuron(const double oc, const double nc)
+Neuron::Neuron(const double oc, const double nc, const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(constants::num_neighbors);
-	history.reserve(constants::num_bins);
+	neighbors.reserve(max_neighbors);
+	history.reserve(num_bins);
 	this->oc = oc;
 	this->nc = nc;
 }
 
-Neuron::Neuron(const double Vm, const double Cm, const double n, const double m, const double h)
+Neuron::Neuron(const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(constants::num_neighbors);
-	history.reserve(constants::num_bins);
+	neighbors.reserve(max_neighbors);
+	history.reserve(num_bins);
 	this->Vm = Vm;
 	this->Cm = Cm;
 	this->n = n; 

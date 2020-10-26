@@ -45,14 +45,14 @@ NeuronalNetwork::NeuronalNetwork(std::initializer_list<int> layers)
 NeuronalNetwork::~NeuronalNetwork() 
 {
 	/*
-		deconstructor
+		Deconstructor
 	*/
 	if (threadpool) {
 		delete threadpool;
 	}
 }
 
-std::vector<double> NeuronalNetwork::Start() noexcept
+const void NeuronalNetwork::Start() noexcept
 {
 	/*
 		Performs Voltage clamp on layer 1
@@ -61,12 +61,11 @@ std::vector<double> NeuronalNetwork::Start() noexcept
 	// start and stop variables to store time stamps
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	
-	
 	int count = 0;
 	// sum of neurons in all the layers
-	int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
+	const int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
 	// iterates over the number of bins
-	for (int t = 0; t < constants::num_bins; ++t) {
+	for (int t = 0; t < NeuronalNetwork::num_bins; t++) {
 		// start time stamp for each bin
 		start = std::chrono::system_clock::now();
 		// iterates over the number of layers
@@ -77,7 +76,7 @@ std::vector<double> NeuronalNetwork::Start() noexcept
 			// iterate over an individual layer
 			for (int j = branchless; j < layers_sizes[i] + branchless; j++) {
 				// if iterating over the first layer
-				if (i == 0) {
+				if (i == 0 && t > 5000 && t < 15000) {
 					// voltage clamp neuron in first layer
 					neurons[j].InjectCurrent(voltage_clamp);
 				}
@@ -98,13 +97,9 @@ std::vector<double> NeuronalNetwork::Start() noexcept
 			// calculate time difference
 			std::chrono::duration<double> elapsed_seconds = end - start;
 			// print time step percentage and time difference
-			std::cout << "time step: " << (((double)t)/((double)constants::num_bins)) * 100 << "%, elapsed time: " << elapsed_seconds.count() << "s\n";
+			std::cout << "time step: " << (((double)t)/((double)NeuronalNetwork::num_bins)) * 100 << "%, elapsed time: " << elapsed_seconds.count() << "s\n";
 		}
 	}
-	
-	// moves the history log of the last neuron in the last layer
-	// used to graph the membrane potential
-	return std::move(neurons[neurons.size() - 1].GetHistory());
 }
 
 const void NeuronalNetwork::Stop() noexcept
@@ -122,10 +117,35 @@ const void NeuronalNetwork::Cancel() noexcept
 	Stop();
 }
 
+std::vector<Neuron>& NeuronalNetwork::GetNeurons() noexcept
+{
+	return neurons;
+}
+
 const bool NeuronalNetwork::Stopped() noexcept
 {
 	// checks if threadpool has stopped
 	return threadpool->stopped();
+}
+
+const void NeuronalNetwork::SetVoltageClamp(const double vc) noexcept
+{
+	NeuronalNetwork::voltage_clamp = vc;
+}
+
+const void NeuronalNetwork::SetDeltaTime(const double dt) noexcept
+{
+	NeuronalNetwork::dt = dt;
+}
+
+const void NeuronalNetwork::SetNumBins(const int nb) noexcept
+{
+	NeuronalNetwork::num_bins = nb;
+}
+
+const void NeuronalNetwork::SetMaxNeighbors(const int mn) noexcept
+{
+	NeuronalNetwork::max_neighbors = mn;
 }
 
 pthread_mutex_t* NeuronalNetwork::ResultMutex() noexcept
@@ -168,8 +188,7 @@ const void NeuronalNetwork::Initialize(int sum_neurons) noexcept
 		// branchless initial index of layer
 		int branchless = ((i == 0) ? 0 : (i == layers_sizes.size() - 1) ? sum_neurons - layers_sizes.back() : layers_sizes[i - 1]);
 		for (int j = branchless; j < layers_sizes[i] + branchless; j++) {
-			// assigns postsynaptic neuron
-			// using a modulo
+			// assigns postsynaptic neuron using a modulo
 			neurons[j].AddPostsynapticNeuron(&neurons[count + j % layers_sizes[i + 1]]);
 		}
 	}
