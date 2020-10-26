@@ -8,13 +8,13 @@
 
 #include "NeuronalNetwork.h"
 
-NeuronalNetwork::NeuronalNetwork()
+__attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork()
 {
 	// initialize threadpool
 	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS);
 }
 
-NeuronalNetwork::NeuronalNetwork(std::vector<int> layers)
+__attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::vector<int> layers)
 {
 	/*
 		Constructor initializes neurons and estabilshed neighbors and postsynaptic shcematics of the network
@@ -28,7 +28,7 @@ NeuronalNetwork::NeuronalNetwork(std::vector<int> layers)
 	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS, sum_neurons);
 }
 
-NeuronalNetwork::NeuronalNetwork(std::initializer_list<int> layers)
+__attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::initializer_list<int> layers)
 {
 	/*
 	 Constructor initializes neurons and estabilshed neighbors and postsynaptic shcematics of the network
@@ -42,7 +42,7 @@ NeuronalNetwork::NeuronalNetwork(std::initializer_list<int> layers)
 	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS, sum_neurons);
 }
 
-NeuronalNetwork::~NeuronalNetwork() 
+__attribute__((visibility("default"))) NeuronalNetwork::~NeuronalNetwork()
 {
 	/*
 		Deconstructor
@@ -52,7 +52,7 @@ NeuronalNetwork::~NeuronalNetwork()
 	}
 }
 
-const void NeuronalNetwork::Start() noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::Start() noexcept
 {
 	/*
 		Performs Voltage clamp on layer 1
@@ -102,66 +102,101 @@ const void NeuronalNetwork::Start() noexcept
 	}
 }
 
-const void NeuronalNetwork::Stop() noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::Stop() noexcept
 {
-	// asks theadpool to stop execution and clears the queue
+	/*
+		asks theadpool to stop execution and clears the queue
+	*/
 	threadpool->stop();
 	threadpool->clear();
 }
 
-const void NeuronalNetwork::Cancel() noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::Cancel() noexcept
 {
-	// forces theadpool to cancel execution
-	// does not clear allocated objects
+	/*
+		forces theadpool to cancel execution
+		does not clear allocated objects
+	*/
 	threadpool->cancel();
 	Stop();
 }
 
-std::vector<Neuron>& NeuronalNetwork::GetNeurons() noexcept
+__attribute__((visibility("default"))) std::vector<Neuron>& NeuronalNetwork::GetNeurons() noexcept
 {
+	/*
+		return neuron vector reference
+	*/
 	return neurons;
 }
 
-const bool NeuronalNetwork::Stopped() noexcept
+__attribute__((visibility("default"))) const bool NeuronalNetwork::Stopped() noexcept
 {
-	// checks if threadpool has stopped
+	/*
+		checks if threadpool has stopped
+	*/
 	return threadpool->stopped();
 }
 
-const void NeuronalNetwork::SetVoltageClamp(const double vc) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetVoltageClamp(const double vc) noexcept
 {
+	/*
+		sets static voltage_clamp
+	*/
 	NeuronalNetwork::voltage_clamp = vc;
 }
 
-const void NeuronalNetwork::SetDeltaTime(const double dt) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetDeltaTime(const double dt) noexcept
 {
+	/*
+		sets static delta t, bin size
+	*/
 	NeuronalNetwork::dt = dt;
 }
 
-const void NeuronalNetwork::SetNumBins(const int nb) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetNumBins(const int nb) noexcept
 {
+	/*
+		sets static number of bins, iterations
+	*/
 	NeuronalNetwork::num_bins = nb;
 }
 
-const void NeuronalNetwork::SetMaxNeighbors(const int mn) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetMaxNeighbors(const int mn) noexcept
 {
+	/*
+		sets static estimated max number of neighbors
+		used to reserve memory in vectors, to reduce computation time of growing a vector dynamically
+	*/
 	NeuronalNetwork::max_neighbors = mn;
 }
 
 pthread_mutex_t* NeuronalNetwork::ResultMutex() noexcept
 {
-	// returns result mutex
+	/*
+		returns result mutex
+	*/
 	return &s_result_m;
 }
 
 pthread_mutex_t* NeuronalNetwork::QueueMutex() noexcept
 {
-	// returns queue mutex
+	/*
+		returns queue mutex
+	*/
 	return &s_queue_m;
 }
 
 const void NeuronalNetwork::Initialize(int sum_neurons) noexcept
 {
+	/*
+		stores all neurons in the network into a single vector
+		randomizes output current
+		randomizes neighboring current effect
+	 
+		Establishes network:
+			adds references to neighboring neurons
+			adds references to postsynaptic neurons
+	*/
 	for (int i = 0; i < sum_neurons; i++) {
 		// initialize Neuron with random output current and neighboring current
 		neurons.emplace_back(Neuron(Rand(0.01, 0.05), Rand(0.001, 0.005)));
@@ -212,7 +247,6 @@ NeuronalNetwork::NeuronThread::NeuronThread(std::vector<NeuronArg>* queue, void*
 	this->queue = queue;
 	this->results = results;
 	this->count = count;
-	
 }
 
 // move construtor

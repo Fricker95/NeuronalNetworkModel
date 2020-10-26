@@ -9,7 +9,7 @@
 #ifndef NeuronalNetwork_
 #define NeuronalNetwork_
 
-#pragma GCC visibility push(default)
+#pragma GCC visibility push(hidden)
 
 #include "Neuron.h"
 #include "ThreadPool.hpp"
@@ -79,7 +79,7 @@ public:
 private:
 	const void Initialize(int sum_neurons) noexcept;
 	
-	class NeuronArg
+	struct NeuronArg
 	{
 	public:
 		// Neuron pointer
@@ -87,7 +87,6 @@ private:
 		// delta time
 		double dt = 0;
 
-	public:
 		NeuronArg();
 		NeuronArg(Neuron* neuron, const double dt);
 		NeuronArg(NeuronArg&& other);
@@ -112,7 +111,6 @@ private:
 		~NeuronThread();
 
 		void* run() noexcept;
-		
 	};
 };
 

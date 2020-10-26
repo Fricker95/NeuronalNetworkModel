@@ -1,3 +1,11 @@
+//
+//  PythonWrapper.cpp
+//  NeuronalNetwork
+//
+//  Created by Nicolas Fricker on 04/10/20.
+//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//
+
 #include "PythonWrapper.h"
 
 const double* run(const double x, const double dt, const int size, int* layers, int n)

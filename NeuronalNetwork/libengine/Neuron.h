@@ -9,7 +9,7 @@
 #ifndef Neuron_
 #define Neuron_
 
-#pragma GCC visibility push(default)
+#pragma GCC visibility push(hidden)
 
 #include <iostream>
 #include <cstdlib>
@@ -108,7 +108,6 @@ private:
 };
 
 #pragma GCC visibility pop
-
 #endif /* Neuron_ */
 
 
