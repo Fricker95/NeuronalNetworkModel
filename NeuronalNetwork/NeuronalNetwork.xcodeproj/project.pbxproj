@@ -15,6 +15,7 @@
 		EA1C15B0253314A100DBE69C /* Neuron.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EA1C158C2533138A00DBE69C /* Neuron.cpp */; };
 		EA1C15BD253315AD00DBE69C /* libengine.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EA1C159B2533142400DBE69C /* libengine.dylib */; };
 		EA1C15D52534D3C600DBE69C /* PythonWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EA1C15CC2534D0EB00DBE69C /* PythonWrapper.cpp */; };
+		EAFA96EF25477C260005D92F /* libengine.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = EA1C159B2533142400DBE69C /* libengine.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +27,17 @@
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 1;
+		};
+		EAFA96F025477C260005D92F /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				EAFA96EF25477C260005D92F /* libengine.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -126,6 +138,7 @@
 				EA1C157D2533135900DBE69C /* Sources */,
 				EA1C157E2533135900DBE69C /* Frameworks */,
 				EA1C157F2533135900DBE69C /* CopyFiles */,
+				EAFA96F025477C260005D92F /* Embed Libraries */,
 			);
 			buildRules = (
 			);

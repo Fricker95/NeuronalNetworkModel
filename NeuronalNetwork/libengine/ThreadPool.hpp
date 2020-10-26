@@ -11,6 +11,15 @@
 
 #pragma GCC visibility push(hidden)
 
+#ifdef _WIN32
+#include <windows.h>
+#elif MACOS
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <iostream>
 #include <algorithm>
 #include <atomic>
@@ -21,19 +30,19 @@
 
 template <class thread, class queue, class result>
 class ThreadPool {
-	// total count of active threads
-	size_t total_ = 0;
-	// atomic variable storing the progress
-	std::atomic<int> progress_{0};
 	// array of thread objects
 	std::vector<thread> threads_;
 	// array of queue objects
 	std::vector<queue> q_;
 	// array of result objects
 	std::vector<result> results_;
+	// total count of active threads
+	size_t total_ = 0;
+	// atomic variable storing the progress
+	std::atomic<int> a_progress_{0};
 
  public:
-	explicit ThreadPool(int n_threads = 1, int n_items = 1);
+	explicit ThreadPool(int n_items = 1, int n_threads = 0);
 	~ThreadPool();
 	
 	template <typename... Args>
@@ -60,15 +69,16 @@ class ThreadPool {
 	const bool stopped() noexcept;
 
 	class Thread_ {
-		// thread id
-		pthread_t id_;
 		// thread attributed: detached
 		pthread_attr_t attribute_;
+		// thread id
+		pthread_t id_;
+		
+		void* result_ = nullptr;
 		
 		bool started_ = false;
 		bool stopped_ = false;
 		bool detached_ = false;
-		void* result_ = nullptr;
 
 	 public:
 		Thread_();
@@ -111,12 +121,36 @@ class ThreadPool {
 #endif /* ThreadPool_ */
 
 template <class thread, class queue, class result>
-ThreadPool<thread, queue, result>::ThreadPool(int n_threads, int n_items) {
+ThreadPool<thread, queue, result>::ThreadPool(int n_items, int n_threads) {
+	if (n_threads == 0) {
+#ifdef WIN32
+		SYSTEM_INFO sysinfo;
+		GetSystemInfo(&sysinfo);
+		n_threads = sysinfo.dwNumberOfProcessors;
+#elif MACOS
+		int nm[2];
+		size_t len = 4;
+		uint32_t count;
+		
+		nm[0] = CTL_HW; nm[1] = HW_AVAILCPU;
+		sysctl(nm, 2, &count, &len, NULL, 0);
+		
+		if(count < 1) {
+			nm[1] = HW_NCPU;
+			sysctl(nm, 2, &count, &len, NULL, 0);
+			if(count < 1) { count = 1; }
+		}
+		n_threads = count;
+#else
+		n_threads = (int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+	}
+	printf("MAX_THREADS: %i\n", n_threads);
 	threads_.reserve(n_threads);
 	q_.reserve(n_items);
 	// thread implicit initialization
 	for (size_t i = 0; i < n_threads; ++i)
-	threads_.emplace_back(&q_, &results_, &progress_);
+	threads_.emplace_back(&q_, &results_, &a_progress_);
 }
 
 template <class thread, class queue, class result>
@@ -144,7 +178,7 @@ const void ThreadPool<thread, queue, result>::start(bool sort) noexcept {
 		sets the total variable based on how many tasks are in the queue
 		launches threads
 	*/
-	progress_ = 0;
+	a_progress_ = 0;
 	
 	if (threads_.size() < q_.size()) {
 		total_ = threads_.size();
@@ -228,7 +262,7 @@ inline const int ThreadPool<thread, queue, result>::progress() noexcept {
 	/*
 		returns progress
 	*/
-	return progress_;
+	return a_progress_;
 }
 
 template <class thread, class queue, class result>

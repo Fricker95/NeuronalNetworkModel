@@ -6,32 +6,42 @@
 //  Copyright © 2019 Nicolas Fricker. All rights reserved.
 //
 
-
 #include "Neuron.h"
 
-Neuron::Neuron(const int num_bins, const int max_neighbors)
+#include <cstdlib>
+#include <cmath>
+
+
+Neuron::Neuron(neuron_id_t neuron_id, const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(max_neighbors);
-	history.reserve(num_bins);
+	id_ = neuron_id;
+	neighbors_.reserve(max_neighbors);
+	history_.reserve(num_bins);
+	oc_ = Rand(0.01, 0.05);
+	nc_ = Rand(0.001, 0.005);
 }
 
-Neuron::Neuron(const double oc, const double nc, const int num_bins, const int max_neighbors)
+Neuron::Neuron(neuron_id_t neuron_id, const double oc, const double nc, const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(max_neighbors);
-	history.reserve(num_bins);
-	this->oc = oc;
-	this->nc = nc;
+	id_ = neuron_id;
+	neighbors_.reserve(max_neighbors);
+	history_.reserve(num_bins);
+	oc_ = oc;
+	nc_ = nc;
 }
 
-Neuron::Neuron(const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins, const int max_neighbors)
+Neuron::Neuron(neuron_id_t neuron_id, const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins, const int max_neighbors)
 {
-	neighbors.reserve(max_neighbors);
-	history.reserve(num_bins);
-	this->Vm = Vm;
-	this->Cm = Cm;
-	this->n = n; 
-	this->m = m;
-	this->h = h;
+	id_ = neuron_id;
+	neighbors_.reserve(max_neighbors);
+	history_.reserve(num_bins);
+	Vm_ = Vm;
+	Cm_ = Cm;
+	n_ = n;
+	m_ = m;
+	h_ = h;
+	oc_ = Rand(0.01, 0.05);
+	nc_ = Rand(0.001, 0.005);
 }
 
 Neuron::Neuron(Neuron&& other)
@@ -39,20 +49,22 @@ Neuron::Neuron(Neuron&& other)
 	/*
 		move constructor
 	*/
-	Isum = other.Isum.load();
+	a_Isum_ = other.a_Isum_.load();
 	
-	postsynaptic = std::move(other.postsynaptic);
-	neighbors = std::move(other.neighbors);
-	history = std::move(other.history);
+	postsynaptic_ = std::move(other.postsynaptic_);
+	neighbors_ = std::move(other.neighbors_);
+	history_ = std::move(other.history_);
 	
-	n = std::move(other.n);
-	m = std::move(other.m);
-	h = std::move(other.h);
+	n_ = std::move(other.n_);
+	m_ = std::move(other.m_);
+	h_ = std::move(other.h_);
 	
-	oc = std::move(other.oc);
-	nc = std::move(other.nc);
+	oc_ = std::move(other.oc_);
+	nc_ = std::move(other.nc_);
 	
-	spiked = std::move(other.spiked);
+	id_ = std::move(other.id_);
+	
+	spiked_ = std::move(other.spiked_);
 }
 
 Neuron::~Neuron() {}
@@ -63,29 +75,29 @@ Neuron& Neuron::operator=(const Neuron& other)
 		equal operator copy assignment
 	*/
 	if (this != &other) {
-		Isum = other.Isum.load();
+		a_Isum_ = other.a_Isum_.load();
 		
-		postsynaptic = other.postsynaptic;
+		postsynaptic_ = other.postsynaptic_;
 		
-		neighbors.clear();
-		for (int i = 0; i < other.neighbors.size(); i++) {
-			neighbors.emplace_back(other.neighbors[i]);
+		neighbors_.clear();
+		for (int i = 0; i < other.neighbors_.size(); i++) {
+			neighbors_.emplace_back(other.neighbors_[i]);
 		}
 		
-		history.clear();
+		history_.clear();
 		
-		for (int i = 0; i < other.history.size(); i++) {
-			history.emplace_back(other.history[i]);
+		for (int i = 0; i < other.history_.size(); i++) {
+			history_.emplace_back(other.history_[i]);
 		}
 		
-		n = other.n;
-		m = other.m;
-		h = other.h;
+		n_ = other.n_;
+		m_ = other.m_;
+		h_ = other.h_;
 		
-		oc = other.oc;
-		nc = other.nc;
+		oc_ = other.oc_;
+		nc_ = other.nc_;
 		
-		spiked = other.spiked;
+		spiked_ = other.spiked_;
 	}
 	
 	return *this;
@@ -98,8 +110,8 @@ const double Neuron::Process(const double dt) noexcept
 		sum of current retrived atomically
 		return HodgkinHuxley Model updated membrane potential
 	*/
-	const double Ic = Isum.load();
-	Isum = 0;
+	const double Ic = a_Isum_.load();
+	a_Isum_ = 0;
 	return HodgkinHuxley(dt, Ic);
 }
 
@@ -109,63 +121,71 @@ const void Neuron::InjectCurrent(const double input) noexcept
 		input = input current in µA
 		sums up currents atomically
 	*/
-	Isum.store(Isum.load() + input);
+	a_Isum_.store(a_Isum_.load() + input);
 }
 
-const void Neuron::AddPostsynapticNeuron(Neuron* postsynaptic) noexcept
+__attribute__((visibility("default"))) const void Neuron::AddPostsynapticNeuron(Neuron* postsynaptic) noexcept
 {
 	/*
 		postsynaptic Neuron pointer assignment
 	*/
-	this->postsynaptic = postsynaptic;
+	postsynaptic_ = postsynaptic;
 }
 
-const void Neuron::AddNeighbor(Neuron* neighbor) noexcept
+__attribute__((visibility("default"))) const void Neuron::AddNeighbor(Neuron* neighbor) noexcept
 {
 	/*
 		stores neighboring Neuron pointer
 	*/
-	neighbors.emplace_back(neighbor);
+	neighbors_.emplace_back(neighbor);
 }
 
-const void Neuron::SetMembraneCapacitance(const double Cm) noexcept
+__attribute__((visibility("default"))) const void Neuron::SetMembraneCapacitance(const double Cm) noexcept
 {
 	/*
 		Cm = Membrane Capacitance Density assignment
 	*/
-	this->Cm = Cm;
+	Cm_ = Cm;
 }
 
-std::vector<double>& Neuron::GetHistory() noexcept
+__attribute__((visibility("default"))) const neuron_id_t Neuron::GetNeuronId() noexcept
+{
+	/*
+		rerturn neuron id;
+	*/
+	return id_;
+}
+
+__attribute__((visibility("default"))) std::vector<double>& Neuron::GetHistory() noexcept
 {
 	/*
 		returns membrane potential history log
 	*/
-	return history;
+	return history_;
 }
 
-const size_t Neuron::GetHistorySize() noexcept
+__attribute__((visibility("default"))) const size_t Neuron::GetHistorySize() noexcept
 {
 	/*
 		returns membrane potential history log's size
 	*/
-	return history.size();
+	return history_.size();
 }
 
-const bool Neuron::IsInhibitory() noexcept
+__attribute__((visibility("default"))) const bool Neuron::IsInhibitory() noexcept
 {
 	/*
 		return true if the output current is inhibitor, negative
 	*/
-	return oc < 0;
+	return oc_ < 0;
 }
 
-const bool Neuron::IsExhitatory() noexcept
+__attribute__((visibility("default"))) const bool Neuron::IsExhitatory() noexcept
 {
 	/*
 		return true if the output current is exhitatory, positive
 	*/
-	return oc > 0;
+	return oc_ > 0;
 }
 
 const double Neuron::AM(const double Vm) noexcept
@@ -245,60 +265,61 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 	*/
 
 	// Currents: Na, K, leak
-	const double iNa = GNa * pow(m, 3) * h;
-	const double iK = GK * pow(n, 4);
-	const double iL = GL;
+	const double iNa = s_GNa_ * pow(m_, 3) * h_;
+	const double iK = s_GK_ * pow(n_, 4);
+	const double iL = s_GL_;
 
 	// Sum of ion currents
 	const double iTotal = iNa + iK + iL;
 	
 	// membrane potential as it tends to ∞
-	const double V_inf = ((ENa * iNa + EK * iK + EL * iL) + current_stimulus) / iTotal;
+	const double V_inf = ((s_ENa_ * iNa + s_EK_ * iK + s_EL_ * iL) + current_stimulus) / iTotal;
 	
 	// update membrane potential τ
-	const double tau_v = Cm / iTotal;
+	const double tau_v = Cm_ / iTotal;
 	
 	// update membrane potential
-	Vm = V_inf + (Vm - V_inf) * exp(- dt / tau_v);
+	Vm_ = V_inf + (Vm_ - V_inf) * exp(- dt / tau_v);
 
 	// stores membrane potential in history log
-	history.emplace_back(Vm);
+	history_.emplace_back(Vm_);
 	
 	// branchless cell state update
-	spiked = (Vm >= V_threashold) ? true : false;
+	spiked_ = (Vm_ >= s_V_threashold_) ? true : false;
 	
 	// propagates output current to postsynaptic Neuron and neighboring current to neighboring Neurons in time step t
 	//for processing in time step t + 1
-	if (postsynaptic) {
+	if (postsynaptic_) {
 		// increment postsynaptic neuron's current by transmitted output current
 		// branchless if spiked == true
-		postsynaptic->InjectCurrent(oc * spiked);
+		postsynaptic_->InjectCurrent(oc_ * spiked_);
 	}
 
-	for (int i = 0; i < neighbors.size(); i++) {
-		if (neighbors[i]) {
+	for (int i = 0; i < neighbors_.size(); i++) {
+		if (neighbors_[i]) {
 			// increment neighboring neurons' current exponentially
 			// branchless if spike == true
-			neighbors[i]->InjectCurrent(NeighborCurrent() * spiked);
+			neighbors_[i]->InjectCurrent(NeighborCurrent() * spiked_);
 		}
 	}
 	
 	// update sodium channel activation membrane
-	Step(m, Vm, dt, &Neuron::AM, &Neuron::BM);
+	Step(m_, Vm_, dt, &Neuron::AM, &Neuron::BM);
 	// update leak ion channels activation membrane
-	Step(h, Vm, dt, &Neuron::AH, &Neuron::BH);
+	Step(h_, Vm_, dt, &Neuron::AH, &Neuron::BH);
 	// update potassium channel activation membrane
-	Step(n, Vm, dt, &Neuron::AN, &Neuron::BN);
+	Step(n_, Vm_, dt, &Neuron::AN, &Neuron::BN);
 
-	return Vm;
+	return Vm_;
 }
 
 const double Neuron::NeighborCurrent() noexcept
 {
 	/*
-		Caclculates ∆I effect of this spiking neuron to its neighbors
+		Calculates ∆I effect of this spiking neuron to its neighbors
+		using an exponential function
 	*/
-	return nc * exp(- Vm / V_rest);
+	return nc_ * exp(- Vm_ / s_V_rest_);
 }
 
 

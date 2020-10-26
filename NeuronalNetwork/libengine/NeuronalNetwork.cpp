@@ -11,7 +11,7 @@
 __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork()
 {
 	// initialize threadpool
-	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS);
+	sp_threadpool_ = new ThreadPool<NeuronThread, NeuronArg, void*>();
 }
 
 __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::vector<int> layers)
@@ -19,13 +19,13 @@ __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::vec
 	/*
 		Constructor initializes neurons and estabilshed neighbors and postsynaptic shcematics of the network
 	*/
-	layers_sizes = std::move(layers);
-	int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
+	layers_sizes_ = std::move(layers);
+	int sum_neurons = std::accumulate(layers_sizes_.begin(), layers_sizes_.end(), 0);
 	
-	Initialize(sum_neurons);
+	AllocateNeurons(sum_neurons);
 	
 	// initialize threadpool
-	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS, sum_neurons);
+	sp_threadpool_ = new ThreadPool<NeuronThread, NeuronArg, void*>(sum_neurons);
 }
 
 __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::initializer_list<int> layers)
@@ -33,13 +33,13 @@ __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork(std::ini
 	/*
 	 Constructor initializes neurons and estabilshed neighbors and postsynaptic shcematics of the network
 	 */
-	layers_sizes = std::move(layers);
-	int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
+	layers_sizes_ = std::move(layers);
+	int sum_neurons = std::accumulate(layers_sizes_.begin(), layers_sizes_.end(), 0);
 	
-	Initialize(sum_neurons);
+	AllocateNeurons(sum_neurons);
 	
 	// initialize threadpool
-	threadpool = new ThreadPool<NeuronThread, NeuronArg, void*>(MAX_THREADS, sum_neurons);
+	sp_threadpool_ = new ThreadPool<NeuronThread, NeuronArg, void*>(sum_neurons);
 }
 
 __attribute__((visibility("default"))) NeuronalNetwork::~NeuronalNetwork()
@@ -47,8 +47,42 @@ __attribute__((visibility("default"))) NeuronalNetwork::~NeuronalNetwork()
 	/*
 		Deconstructor
 	*/
-	if (threadpool) {
-		delete threadpool;
+	if (sp_threadpool_) {
+		delete sp_threadpool_;
+	}
+}
+
+__attribute__((visibility("default"))) void NeuronalNetwork::InitializeNetwork()
+{
+	/*
+		Virtual function that establishes network:
+		adds references to neighboring neurons
+		adds references to postsynaptic neurons
+	 */
+	int count = 0;
+	
+	for (int i = 0; i < layers_sizes_.size(); i++) {
+		for (int j = count; j < layers_sizes_[i]; j++) {
+			for (int m = count; m < layers_sizes_[i]; m++) {
+				if (j != m) {
+					// adds all neighboring neurons in the layer
+					neurons_[j].AddNeighbor(&neurons_[m]);
+				}
+			}
+			count++;
+		}
+	}
+	
+	count = 0;
+	
+	for (int i = 0; i < layers_sizes_.size() - 1; i++) {
+		count += layers_sizes_[i];
+		// branchless initial index of layer
+		int branchless = ((i == 0) ? 0 : (i == layers_sizes_.size() - 1) ? (int)neurons_.size() - layers_sizes_.back() : layers_sizes_[i - 1]);
+		for (int j = branchless; j < layers_sizes_[i] + branchless; j++) {
+			// assigns postsynaptic neuron using a modulo
+			neurons_[j].AddPostsynapticNeuron(&neurons_[count + j % layers_sizes_[i + 1]]);
+		}
 	}
 }
 
@@ -58,35 +92,37 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::Start() noexc
 		Performs Voltage clamp on layer 1
 		resues the threadpool to compute each layer sequentially
 	*/
+	InitializeNetwork();
+	
 	// start and stop variables to store time stamps
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	
 	int count = 0;
 	// sum of neurons in all the layers
-	const int sum_neurons = std::accumulate(layers_sizes.begin(), layers_sizes.end(), 0);
+	const int sum_neurons = std::accumulate(layers_sizes_.begin(), layers_sizes_.end(), 0);
 	// iterates over the number of bins
-	for (int t = 0; t < NeuronalNetwork::num_bins; t++) {
+	for (int t = 0; t < NeuronalNetwork::s_num_bins_; t++) {
 		// start time stamp for each bin
 		start = std::chrono::system_clock::now();
 		// iterates over the number of layers
-		for (int i = 0; i < layers_sizes.size(); i++) {
-			count += layers_sizes[i];
+		for (int i = 0; i < layers_sizes_.size(); i++) {
+			count += layers_sizes_[i];
 			// branchless calculation of initial index of each layer i the array of total neurons in the system
-			int branchless = ((i == 0) ? 0 : (i == layers_sizes.size() - 1) ? sum_neurons - layers_sizes.back() : layers_sizes[i - 1]);
+			int branchless = ((i == 0) ? 0 : (i == layers_sizes_.size() - 1) ? sum_neurons - layers_sizes_.back() : layers_sizes_[i - 1]);
 			// iterate over an individual layer
-			for (int j = branchless; j < layers_sizes[i] + branchless; j++) {
+			for (int j = branchless; j < layers_sizes_[i] + branchless; j++) {
 				// if iterating over the first layer
-				if (i == 0 && t > 5000 && t < 15000) {
+				if (i == 0) { //  && (t < 5000 || t > 15000)
 					// voltage clamp neuron in first layer
-					neurons[j].InjectCurrent(voltage_clamp);
+					neurons_[j].InjectCurrent(s_Iclamp_);
 				}
 				// add tasks to threadpool
-				threadpool->set_task<Neuron*, double>(&neurons[j], dt);
+				sp_threadpool_->set_task<Neuron*, double>(&neurons_[j], s_dt_);
 			}
 			// start thread pool
-			threadpool->start();
+			sp_threadpool_->start();
 			// wait until threads have joined
-			threadpool->join();
+			sp_threadpool_->join();
 		}
 		
 		// every 10 bins
@@ -97,7 +133,7 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::Start() noexc
 			// calculate time difference
 			std::chrono::duration<double> elapsed_seconds = end - start;
 			// print time step percentage and time difference
-			std::cout << "time step: " << (((double)t)/((double)NeuronalNetwork::num_bins)) * 100 << "%, elapsed time: " << elapsed_seconds.count() << "s\n";
+			std::cout << "time step: " << (((double)t)/((double)NeuronalNetwork::s_num_bins_)) * 100 << "%, elapsed time: " << elapsed_seconds.count() << "s\n";
 		}
 	}
 }
@@ -107,8 +143,8 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::Stop() noexce
 	/*
 		asks theadpool to stop execution and clears the queue
 	*/
-	threadpool->stop();
-	threadpool->clear();
+	sp_threadpool_->stop();
+	sp_threadpool_->clear();
 }
 
 __attribute__((visibility("default"))) const void NeuronalNetwork::Cancel() noexcept
@@ -117,8 +153,19 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::Cancel() noex
 		forces theadpool to cancel execution
 		does not clear allocated objects
 	*/
-	threadpool->cancel();
+	sp_threadpool_->cancel();
 	Stop();
+}
+
+__attribute__((visibility("default"))) const void NeuronalNetwork::AllocateNeurons(size_t n) noexcept
+{
+	/*
+		Stores n neurons into the neurons_ vector;
+	*/
+	for (int i = 0; i < n; i++) {
+		// initialize Neuron with random output current and neighboring current
+		neurons_.emplace_back(i, NeuronalNetwork::s_num_bins_, NeuronalNetwork::s_max_neighbors_);
+	}
 }
 
 __attribute__((visibility("default"))) std::vector<Neuron>& NeuronalNetwork::GetNeurons() noexcept
@@ -126,7 +173,7 @@ __attribute__((visibility("default"))) std::vector<Neuron>& NeuronalNetwork::Get
 	/*
 		return neuron vector reference
 	*/
-	return neurons;
+	return neurons_;
 }
 
 __attribute__((visibility("default"))) const bool NeuronalNetwork::Stopped() noexcept
@@ -134,23 +181,23 @@ __attribute__((visibility("default"))) const bool NeuronalNetwork::Stopped() noe
 	/*
 		checks if threadpool has stopped
 	*/
-	return threadpool->stopped();
+	return sp_threadpool_->stopped();
 }
 
-__attribute__((visibility("default"))) const void NeuronalNetwork::SetVoltageClamp(const double vc) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetCurrentClamp(const double cc) noexcept
 {
 	/*
 		sets static voltage_clamp
 	*/
-	NeuronalNetwork::voltage_clamp = vc;
+	NeuronalNetwork::s_Iclamp_ = cc;
 }
 
-__attribute__((visibility("default"))) const void NeuronalNetwork::SetDeltaTime(const double dt) noexcept
+__attribute__((visibility("default"))) const void NeuronalNetwork::SetTimeStep(const double dt) noexcept
 {
 	/*
 		sets static delta t, bin size
 	*/
-	NeuronalNetwork::dt = dt;
+	NeuronalNetwork::s_dt_ = dt;
 }
 
 __attribute__((visibility("default"))) const void NeuronalNetwork::SetNumBins(const int nb) noexcept
@@ -158,7 +205,7 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::SetNumBins(co
 	/*
 		sets static number of bins, iterations
 	*/
-	NeuronalNetwork::num_bins = nb;
+	NeuronalNetwork::s_num_bins_ = nb;
 }
 
 __attribute__((visibility("default"))) const void NeuronalNetwork::SetMaxNeighbors(const int mn) noexcept
@@ -167,7 +214,7 @@ __attribute__((visibility("default"))) const void NeuronalNetwork::SetMaxNeighbo
 		sets static estimated max number of neighbors
 		used to reserve memory in vectors, to reduce computation time of growing a vector dynamically
 	*/
-	NeuronalNetwork::max_neighbors = mn;
+	NeuronalNetwork::s_max_neighbors_ = mn;
 }
 
 pthread_mutex_t* NeuronalNetwork::ResultMutex() noexcept
@@ -175,7 +222,7 @@ pthread_mutex_t* NeuronalNetwork::ResultMutex() noexcept
 	/*
 		returns result mutex
 	*/
-	return &s_result_m;
+	return &s_result_m_;
 }
 
 pthread_mutex_t* NeuronalNetwork::QueueMutex() noexcept
@@ -183,74 +230,31 @@ pthread_mutex_t* NeuronalNetwork::QueueMutex() noexcept
 	/*
 		returns queue mutex
 	*/
-	return &s_queue_m;
-}
-
-const void NeuronalNetwork::Initialize(int sum_neurons) noexcept
-{
-	/*
-		stores all neurons in the network into a single vector
-		randomizes output current
-		randomizes neighboring current effect
-	 
-		Establishes network:
-			adds references to neighboring neurons
-			adds references to postsynaptic neurons
-	*/
-	for (int i = 0; i < sum_neurons; i++) {
-		// initialize Neuron with random output current and neighboring current
-		neurons.emplace_back(Neuron(Rand(0.01, 0.05), Rand(0.001, 0.005)));
-	}
-	
-	int count = 0;
-	
-	for (int i = 0; i < layers_sizes.size(); i++) {
-		for (int j = count; j < layers_sizes[i]; j++) {
-			for (int m = count; m < layers_sizes[i]; m++) {
-				if (j != m) {
-					// adds all neighboring neurons in the layer
-					neurons[j].AddNeighbor(&neurons[m]);
-				}
-			}
-			count++;
-		}
-	}
-	
-	count = 0;
-	
-	for (int i = 0; i < layers_sizes.size() - 1; i++) {
-		count += layers_sizes[i];
-		// branchless initial index of layer
-		int branchless = ((i == 0) ? 0 : (i == layers_sizes.size() - 1) ? sum_neurons - layers_sizes.back() : layers_sizes[i - 1]);
-		for (int j = branchless; j < layers_sizes[i] + branchless; j++) {
-			// assigns postsynaptic neuron using a modulo
-			neurons[j].AddPostsynapticNeuron(&neurons[count + j % layers_sizes[i + 1]]);
-		}
-	}
+	return &s_queue_m_;
 }
 
 NeuronalNetwork::NeuronArg::NeuronArg() {}
 
 NeuronalNetwork::NeuronArg::NeuronArg(Neuron* neuron, double dt)
 {
-	this->neuron = neuron;
-	this->dt = dt;
+	neuron_ = neuron;
+	dt_ = dt;
 }
 
 // move constructor
-NeuronalNetwork::NeuronArg::NeuronArg(NeuronArg&& other): neuron(std::move(other.neuron)), dt(std::move(other.dt)) {}
+NeuronalNetwork::NeuronArg::NeuronArg(NeuronArg&& other): neuron_(std::move(other.neuron_)), dt_(std::move(other.dt_)) {}
 
 NeuronalNetwork::NeuronArg::~NeuronArg() {}
 
 NeuronalNetwork::NeuronThread::NeuronThread(std::vector<NeuronArg>* queue, void* results, std::atomic<int>* count)
 {
-	this->queue = queue;
-	this->results = results;
-	this->count = count;
+	queue_ = queue;
+	results_ = results;
+	a_count_ = count;
 }
 
 // move construtor
-NeuronalNetwork::NeuronThread::NeuronThread(NeuronThread&& other): queue(std::move(other.queue)), results(std::move(other.results)), count(std::move(other.count)) {}
+NeuronalNetwork::NeuronThread::NeuronThread(NeuronThread&& other): queue_(std::move(other.queue_)), results_(std::move(other.results_)), a_count_(std::move(other.a_count_)) {}
 
 NeuronalNetwork::NeuronThread::~NeuronThread() {}
 
@@ -265,26 +269,26 @@ void* NeuronalNetwork::NeuronThread::run() noexcept
 
 	while (true) {
 		// lock queue mutex
-		pthread_mutex_lock(&s_queue_m);
+		pthread_mutex_lock(&s_queue_m_);
 		// breaks while loop if queue is empty or stopped flag is triggered
-		if (queue->empty() || stopped()) {
+		if (queue_->empty() || stopped()) {
 			// unlock queue mutex
-			pthread_mutex_unlock(&s_queue_m);
+			pthread_mutex_unlock(&s_queue_m_);
 			break;
 		}
 		// moves neuron argument from back of queue to local variable
-		arg = std::move(queue->back());
+		arg = std::move(queue_->back());
 		// pop last element in the queue
-		queue->pop_back();
+		queue_->pop_back();
 		// unlock queue mutex
-		pthread_mutex_unlock(&s_queue_m);
+		pthread_mutex_unlock(&s_queue_m_);
 		
-		if (arg.neuron) {
+		if (arg.neuron_) {
 			// update membrane potential
-			arg.neuron->Process(arg.dt);
+			arg.neuron_->Process(arg.dt_);
 		}
 		// increments count
-		(*count)++;
+		(*a_count_)++;
 	}
 	
 	return NULL;

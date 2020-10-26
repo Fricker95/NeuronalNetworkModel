@@ -8,10 +8,43 @@
 
 #include "PythonWrapper.h"
 
+MyNN::MyNN(std::vector<int> layers): NeuronalNetwork(layers), layers(std::move(layers)), neurons(&GetNeurons()) {}
+
+MyNN::~MyNN() {}
+
+void MyNN::InitializeNetwork()
+{
+	int count = 0;
+	
+	for (int i = 0; i < layers.size(); i++) {
+		for (int j = count; j < layers[i]; j++) {
+			for (int m = count; m < layers[i]; m++) {
+				if (j != m) {
+					// adds all neighboring neurons in the layer
+					(*neurons)[j].AddNeighbor(&(*neurons)[m]);
+				}
+			}
+			count++;
+		}
+	}
+	
+	count = 0;
+	
+	for (int i = 0; i < layers.size() - 1; i++) {
+		count += layers[i];
+		// branchless initial index of layer
+		int branchless = ((i == 0) ? 0 : (i == layers.size() - 1) ? (int)neurons->size() - layers.back() : layers[i - 1]);
+		for (int j = branchless; j < layers[i] + branchless; j++) {
+			// assigns postsynaptic neuron using a modulo
+			(*neurons)[j].AddPostsynapticNeuron(&(*neurons)[count + j % layers[i + 1]]);
+		}
+	}
+}
+
 const double* run(const double x, const double dt, const int size, int* layers, int n)
 {
-	NeuronalNetwork::SetVoltageClamp(x);
-	NeuronalNetwork::SetDeltaTime(dt);
+	NeuronalNetwork::SetCurrentClamp(x);
+	NeuronalNetwork::SetTimeStep(dt);
 	NeuronalNetwork::SetNumBins(size);
 	
 	std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -19,7 +52,7 @@ const double* run(const double x, const double dt, const int size, int* layers, 
 	start = std::chrono::system_clock::now();
 	
 //	{256,64,16,4,1}
-	NeuronalNetwork network(std::vector<int>(layers, layers + n));
+	MyNN network(std::vector<int>(layers, layers + n));
 	
 	network.Start();
 	
