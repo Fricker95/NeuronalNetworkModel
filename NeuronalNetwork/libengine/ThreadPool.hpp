@@ -13,9 +13,11 @@
 
 #ifdef _WIN32
 #include <windows.h>
+
 #elif MACOS
 #include <sys/param.h>
 #include <sys/sysctl.h>
+
 #else
 #include <unistd.h>
 #endif
@@ -150,7 +152,7 @@ ThreadPool<thread, queue, result>::ThreadPool(int n_items, int n_threads) {
 	q_.reserve(n_items);
 	// thread implicit initialization
 	for (size_t i = 0; i < n_threads; ++i)
-	threads_.emplace_back(&q_, &results_, &a_progress_);
+		threads_.emplace_back(&q_, &results_, &a_progress_);
 }
 
 template <class thread, class queue, class result>
@@ -186,7 +188,7 @@ const void ThreadPool<thread, queue, result>::start(bool sort) noexcept {
 		total_ = q_.size();
 	}
 	for (size_t i = 0; i < total_; ++i)
-	threads_[i].start();
+		threads_[i].start();
 }
 
 template <class thread, class queue, class result>
@@ -207,7 +209,7 @@ const void ThreadPool<thread, queue, result>::cancel() noexcept {
 		does not delete allocated objects
 	*/
 	for (size_t i = 0; i < total_; ++i)
-	threads_[i].cancel();
+		threads_[i].cancel();
 }
 
 template <class thread, class queue, class result>

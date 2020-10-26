@@ -123,20 +123,3 @@ inline const double Rand(const double min, const double max)
 #pragma GCC visibility pop
 #endif /* Neuron_ */
 
-
-
-// [um^2] surface area of the membrane
-//  inline constexpr static const double membrane_surface = 4000.0;
-// [uF/cm^2] membrane capacitance density
-//  inline constexpr static const double membrane_capacitance_density = 0.01;
-// [uF] membrane capacitance
-//  inline constexpr static const double membrane_capacitance = membrane_capacitance_density * membrane_surface * 1e-8;
-
-/*
- // Na conductance [mS]
- inline constexpr static const double sodium_conductance = GNa * membrane_surface * 1e-8;
- // K conductance [mS]
- inline constexpr static const double potassium_conductance = GK * membrane_surface * 1e-8;
- // leak conductance [mS]
- inline constexpr static const double leak_conductance = GL * membrane_surface * 1e-8;
- */
