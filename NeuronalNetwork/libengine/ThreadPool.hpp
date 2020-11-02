@@ -3,7 +3,7 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 12/18/19.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #ifndef ThreadPool_
@@ -71,7 +71,7 @@ class ThreadPool {
 	const bool stopped() noexcept;
 
 	class Thread_ {
-		// thread attributed: detached
+		// thread attributed, used for detaching thread
 		pthread_attr_t attribute_;
 		// thread id
 		pthread_t id_;
@@ -124,6 +124,7 @@ class ThreadPool {
 
 template <class thread, class queue, class result>
 ThreadPool<thread, queue, result>::ThreadPool(int n_items, int n_threads) {
+	// Gets max virtual threads
 	if (n_threads == 0) {
 #ifdef WIN32
 		SYSTEM_INFO sysinfo;

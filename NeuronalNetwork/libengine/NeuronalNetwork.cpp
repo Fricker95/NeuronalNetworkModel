@@ -3,10 +3,15 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 04/10/20.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #include "NeuronalNetwork.h"
+
+#include <iostream>
+#include <cmath>
+#include <chrono>
+#include <numeric>
 
 __attribute__((visibility("default"))) NeuronalNetwork::NeuronalNetwork()
 {

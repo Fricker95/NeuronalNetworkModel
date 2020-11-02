@@ -3,7 +3,7 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 04/10/20.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #include "Neuron.h"
@@ -12,7 +12,7 @@
 #include <cmath>
 
 
-Neuron::Neuron(neuron_id_t neuron_id, const int num_bins, const int max_neighbors)
+Neuron::Neuron(neuron_t neuron_id, const int num_bins, const int max_neighbors)
 {
 	id_ = neuron_id;
 	neighbors_.reserve(max_neighbors);
@@ -21,7 +21,7 @@ Neuron::Neuron(neuron_id_t neuron_id, const int num_bins, const int max_neighbor
 	nc_ = Rand(0.001, 0.005);
 }
 
-Neuron::Neuron(neuron_id_t neuron_id, const double oc, const double nc, const int num_bins, const int max_neighbors)
+Neuron::Neuron(neuron_t neuron_id, const double oc, const double nc, const int num_bins, const int max_neighbors)
 {
 	id_ = neuron_id;
 	neighbors_.reserve(max_neighbors);
@@ -30,7 +30,7 @@ Neuron::Neuron(neuron_id_t neuron_id, const double oc, const double nc, const in
 	nc_ = nc;
 }
 
-Neuron::Neuron(neuron_id_t neuron_id, const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins, const int max_neighbors)
+Neuron::Neuron(neuron_t neuron_id, const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins, const int max_neighbors)
 {
 	id_ = neuron_id;
 	neighbors_.reserve(max_neighbors);
@@ -140,15 +140,71 @@ __attribute__((visibility("default"))) const void Neuron::AddNeighbor(Neuron* ne
 	neighbors_.emplace_back(neighbor);
 }
 
-__attribute__((visibility("default"))) const void Neuron::SetMembraneCapacitance(const double Cm) noexcept
+__attribute__((visibility("default"))) inline const void Neuron::SetMembranePotential(const double Vm) noexcept
 {
 	/*
-		Cm = Membrane Capacitance Density assignment
+		Vm = membrane potential (mV)
+	*/
+	Vm_ = Vm;
+}
+
+__attribute__((visibility("default"))) inline const void Neuron::SetMembraneCapacitance(const double Cm) noexcept
+{
+	/*
+		Cm = Membrane Capacitance Density assignment (C)
 	*/
 	Cm_ = Cm;
 }
 
-__attribute__((visibility("default"))) const neuron_id_t Neuron::GetNeuronId() noexcept
+__attribute__((visibility("default"))) inline const void Neuron::SetOutputCurrent(const double oc) noexcept
+{
+	/*
+		oc = output current (µA)
+	*/
+	oc_ = oc;
+}
+
+__attribute__((visibility("default"))) inline const void Neuron::SetNeighboringInfluence(const double nc) noexcept
+{
+	/*
+		nc = neighboring current influence (µA)
+	*/
+	nc_ = nc;
+}
+
+__attribute__((visibility("default"))) inline const double Neuron::GetMembranePotential() const noexcept
+{
+	/*
+		Getter Vm_
+	*/
+	return Vm_;
+}
+
+__attribute__((visibility("default"))) inline const double Neuron::GetMembraneCapacitance() const noexcept
+{
+	/*
+		Getter Cm_
+	*/
+	return Cm_;
+}
+
+__attribute__((visibility("default"))) inline const double Neuron::GetOutputCurrent() const noexcept
+{
+	/*
+		Getter oc_
+	*/
+	return oc_;
+}
+
+__attribute__((visibility("default"))) inline const double Neuron::GetNeighboringInfluence() const noexcept
+{
+	/*
+		Getter nc_
+	*/
+	return nc_;
+}
+
+__attribute__((visibility("default"))) inline const neuron_t Neuron::GetNeuronId() noexcept
 {
 	/*
 		rerturn neuron id;
@@ -172,7 +228,7 @@ __attribute__((visibility("default"))) const size_t Neuron::GetHistorySize() noe
 	return history_.size();
 }
 
-__attribute__((visibility("default"))) const bool Neuron::IsInhibitory() noexcept
+__attribute__((visibility("default"))) inline const bool Neuron::IsInhibitory() noexcept
 {
 	/*
 		return true if the output current is inhibitor, negative
@@ -180,7 +236,7 @@ __attribute__((visibility("default"))) const bool Neuron::IsInhibitory() noexcep
 	return oc_ < 0;
 }
 
-__attribute__((visibility("default"))) const bool Neuron::IsExhitatory() noexcept
+__attribute__((visibility("default"))) inline const bool Neuron::IsExhitatory() noexcept
 {
 	/*
 		return true if the output current is exhitatory, positive
@@ -188,7 +244,7 @@ __attribute__((visibility("default"))) const bool Neuron::IsExhitatory() noexcep
 	return oc_ > 0;
 }
 
-const double Neuron::AM(const double Vm) noexcept
+inline const double Neuron::AM(const double Vm) noexcept
 {
 	/*
 		αm function
@@ -196,7 +252,7 @@ const double Neuron::AM(const double Vm) noexcept
 	return 0.1 * (Vm + 40.0) / (1.0 - exp(- (Vm + 40.0) / 10.0));
 }
 
-const double Neuron::BM(const double Vm) noexcept
+inline const double Neuron::BM(const double Vm) noexcept
 {
 	/*
 		βm function
@@ -204,7 +260,7 @@ const double Neuron::BM(const double Vm) noexcept
 	return 4.0 * exp(- (Vm + 64.0) / 18.0);
 }
 
-const double Neuron::AH(const double Vm) noexcept
+inline const double Neuron::AH(const double Vm) noexcept
 {
 	/*
 		αh function
@@ -212,7 +268,7 @@ const double Neuron::AH(const double Vm) noexcept
 	return 0.07 * exp(- (Vm + 65) / 20);
 }
 
-const double Neuron::BH(const double Vm) noexcept
+inline const double Neuron::BH(const double Vm) noexcept
 {
 	/*
 		βh function
@@ -220,7 +276,7 @@ const double Neuron::BH(const double Vm) noexcept
 	return 1.0 / (1.0 + exp(- (Vm + 35.0) / 10.0));
 }
 
-const double Neuron::AN(const double Vm) noexcept
+inline const double Neuron::AN(const double Vm) noexcept
 {
 	/*
 		αn function
@@ -228,7 +284,7 @@ const double Neuron::AN(const double Vm) noexcept
 	return 0.01 * (Vm + 55) / (1 - exp(- (Vm + 55.0) / 10.0));
 }
 
-const double Neuron::BN(const double Vm) noexcept
+inline const double Neuron::BN(const double Vm) noexcept
 {
 	/*
 		βn function
@@ -285,7 +341,7 @@ const double Neuron::HodgkinHuxley(const double dt, const double current_stimulu
 	history_.emplace_back(Vm_);
 	
 	// branchless cell state update
-	spiked_ = (Vm_ >= s_V_threashold_) ? true : false;
+	spiked_ = (Vm_ >= s_Vthreashold_) ? true : false;
 	
 	// propagates output current to postsynaptic Neuron and neighboring current to neighboring Neurons in time step t
 	//for processing in time step t + 1
@@ -319,7 +375,17 @@ const double Neuron::NeighborCurrent() noexcept
 		Calculates ∆I effect of this spiking neuron to its neighbors
 		using an exponential function
 	*/
-	return nc_ * exp(- Vm_ / s_V_rest_);
+	return nc_ * exp(- Vm_ / s_Vrest_);
+}
+
+inline const double Neuron::Rand(const double min, const double max)
+{
+	/*
+	 Random function
+	 return a double within the min and max
+	 */
+	const double f = (double)rand() / RAND_MAX;
+	return min + f * (max - min);
 }
 
 

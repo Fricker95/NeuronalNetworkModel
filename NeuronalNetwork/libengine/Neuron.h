@@ -3,7 +3,7 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 04/10/20.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #ifndef Neuron_
@@ -14,10 +14,10 @@
 #include <atomic>
 #include <vector>
 
-typedef unsigned int neuron_id_t;
+typedef unsigned int neuron_t;
 
 class Neuron
-{
+{	
 	// array of neighboring neurons pointer
 	std::vector<Neuron*> neighbors_;
 
@@ -49,15 +49,16 @@ class Neuron
 	// neighbor current increase [µA]
 	double nc_ = 0.001;
 	
-	neuron_id_t id_;
+	// neuron id
+	neuron_t id_;
 	
 	// boolean indicate of cell state
 	bool spiked_ = false;
 
 	// static membrane resting potential
-	inline constexpr static const double s_V_rest_ = -64.9964;
+	inline constexpr static const double s_Vrest_ = -64.9964;
 	// static membrane threashold potential
-	inline constexpr static const double s_V_threashold_ = -55.0;
+	inline constexpr static const double s_Vthreashold_ = -55.0;
 	
 	// ion channel current constants
 	inline constexpr static const double s_GNa_ = 1.20;
@@ -69,11 +70,11 @@ class Neuron
 	inline constexpr static const double s_EL_ = -54.4;
 
 public:
-	Neuron(neuron_id_t neuron_id, const int num_bins = 10000, const int max_neighbors = 10000);
-	Neuron(neuron_id_t neuron_id, const double oc, const double nc, const int num_bins = 10000, const int max_neighbors = 10000);
-	Neuron(neuron_id_t neuron_id, const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins = 10000, const int max_neighbors = 10000);
+	Neuron(neuron_t neuron_id, const int num_bins = 10000, const int max_neighbors = 10000);
+	Neuron(neuron_t neuron_id, const double oc, const double nc, const int num_bins = 10000, const int max_neighbors = 10000);
+	Neuron(neuron_t neuron_id, const double Vm, const double Cm, const double n, const double m, const double h, const int num_bins = 10000, const int max_neighbors = 10000);
 	Neuron(Neuron&& other);
-	~Neuron();
+	virtual ~Neuron();
 	
 	Neuron& operator=(const Neuron& other);
 
@@ -82,9 +83,18 @@ public:
 
 	const void AddPostsynapticNeuron(Neuron* next) noexcept;
 	const void AddNeighbor(Neuron* neighbor) noexcept;
-	const void SetMembraneCapacitance(const double Cm) noexcept;
 	
-	const neuron_id_t GetNeuronId() noexcept;
+	const void SetMembranePotential(const double Vm) noexcept;
+	const void SetMembraneCapacitance(const double Cm) noexcept;
+	const void SetOutputCurrent(const double oc) noexcept;
+	const void SetNeighboringInfluence(const double nc) noexcept;
+	
+	const double GetMembranePotential() const noexcept;
+	const double GetMembraneCapacitance() const noexcept;
+	const double GetOutputCurrent() const noexcept;
+	const double GetNeighboringInfluence() const noexcept;
+	
+	const neuron_t GetNeuronId() noexcept;
 
 	std::vector<double>& GetHistory() noexcept;
 	const size_t GetHistorySize() noexcept;
@@ -107,18 +117,10 @@ private:
 	const double HodgkinHuxley(const double dt, const double current_stimulus) noexcept;
 
 	const double NeighborCurrent() noexcept;
+	
+	static const double Rand(const double min, const double max);
 
 };
-
-inline const double Rand(const double min, const double max)
-{
-	/*
-	 Random function
-	 return a double within the min and max
-	 */
-	const double f = (double)rand() / RAND_MAX;
-	return min + f * (max - min);
-}
 
 #pragma GCC visibility pop
 #endif /* Neuron_ */

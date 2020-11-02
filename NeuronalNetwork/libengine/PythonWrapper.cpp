@@ -3,10 +3,14 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 04/10/20.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #include "PythonWrapper.h"
+
+#include <iostream>
+#include <cmath>
+#include <chrono>
 
 MyNN::MyNN(std::vector<int> layers): NeuronalNetwork(layers), layers(std::move(layers)), neurons(&GetNeurons()) {}
 
@@ -14,6 +18,9 @@ MyNN::~MyNN() {}
 
 void MyNN::InitializeNetwork()
 {
+	/*
+		Overwritten method to initialize network (in this case it is a linear model)
+	*/
 	int count = 0;
 	
 	for (int i = 0; i < layers.size(); i++) {
@@ -41,40 +48,65 @@ void MyNN::InitializeNetwork()
 	}
 }
 
+const void initialize(int n)
+{
+	if (VOLTAGES) {
+		deinitialize();
+	}
+	VOLTAGES = new double[n];
+}
+
+const void deinitialize()
+{
+	if (VOLTAGES) {
+		delete[] VOLTAGES;
+	}
+}
+
 const double* run(const double x, const double dt, const int size, int* layers, int n)
 {
+	// set static Voltage clamp current [µA]
 	NeuronalNetwork::SetCurrentClamp(x);
+	// set static time step duration in [ms]
 	NeuronalNetwork::SetTimeStep(dt);
+	// set static number of iterations
 	NeuronalNetwork::SetNumBins(size);
 	
-	std::chrono::time_point<std::chrono::system_clock> start, end;
+	// simulation time = num_bins * ∆t
 	
+	// declaration of variables for execution time
+	std::chrono::time_point<std::chrono::system_clock> start, end;
+	// stores start time
 	start = std::chrono::system_clock::now();
 	
-//	{256,64,16,4,1}
+	// {256,64,16,4,1}
+	// network initialization
 	MyNN network(std::vector<int>(layers, layers + n));
 	
+	// start iterating through the bins and injecting current into clamped neurons
 	network.Start();
 	
+	// stores end time
 	end = std::chrono::system_clock::now();
-	
+	// ∆t for execution time
 	std::chrono::duration<double> elapsed_seconds = end - start;
-	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 	
-	std::cout << "finished computation at " << std::ctime(&end_time)
-	<< "elapsed time: " << elapsed_seconds.count() << "s\n";
+	// outputs execution time
+	std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 	
-	printf("Done");
+	// outputs termination of program
+	printf("Done\n");
 	
+	// retrieves vector reference of all neurons in the network
 	std::vector<Neuron>* neurons = &network.GetNeurons();
 
-	double* voltages = new double[neurons->size() * size];
+	initialize((int)(neurons->size() * size));
 	
 	for (int i = 0; i < neurons->size(); i++) {
 		for (int j = 0; j < size; j++) {
-			voltages[(i * (*neurons)[i].GetHistorySize()) + j] = (*neurons)[i].GetHistory()[j];
+			VOLTAGES[(i * (*neurons)[i].GetHistorySize()) + j] = (*neurons)[i].GetHistory()[j];
 		}
 	}
 
-	return voltages;
+	return VOLTAGES;
 }

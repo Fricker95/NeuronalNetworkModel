@@ -102,7 +102,8 @@ def main():
 	plot_multiple_V_vs_t(data, iInput, t, dt, arr)
 #	plot_V_vs_t(data[n * (sum(arr) - 1): n * (sum(arr))], iInput, t, dt)
 
-
+	lib.deinitialize()
+	
 
 if __name__ == '__main__':
 	main()

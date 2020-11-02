@@ -3,7 +3,7 @@
 //  NeuronalNetwork
 //
 //  Created by Nicolas Fricker on 04/10/20.
-//  Copyright © 2019 Nicolas Fricker. All rights reserved.
+//  Copyright © 2020 Nicolas Fricker. All rights reserved.
 //
 
 #ifndef NeuronalNetwork_
@@ -14,9 +14,6 @@
 #include "Neuron.h"
 #include "ThreadPool.hpp"
 
-#include <iostream>
-#include <cmath>
-#include <numeric>
 #include <vector>
 
 #include <pthread.h>

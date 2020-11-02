@@ -22,13 +22,13 @@ int main(int argc, const char * argv[]) {
 
 void pythonExecFunc()
 {
-	//	Get dylib symbols
-	std::system("nm -g /Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib > libengine_symbols.txt");
+//	//	Get dylib symbols
+//	std::system("nm -g /Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib > libengine_symbols.txt");
+//
+//	//	Get assembly code
+//	std::system("objdump -disassemble -x86-asm-syntax=intel /Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib > libengine_symbols.txt > libengine.asm");
 	
-	//	Get assembly code
-	std::system("objdump -disassemble -x86-asm-syntax=intel /Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib > libengine_symbols.txt > libengine.asm");
-	
-	//	Run python graphing script
+//	//	Run python graphing script
 	std::system("python3 /Users/fricker/Documents/GitHub/NeuronalNetworkModel/NeuronalNetwork/NeuronalNetwork/test.py");
 }
 
