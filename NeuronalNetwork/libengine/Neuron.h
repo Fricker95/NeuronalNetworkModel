@@ -119,8 +119,7 @@ private:
 	const double NeighborCurrent() noexcept;
 	
 	static const double Rand(const double min, const double max);
-
-};
+} __attribute__((aligned (64)));
 
 #pragma GCC visibility pop
 #endif /* Neuron_ */

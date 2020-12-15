@@ -9,13 +9,16 @@
 #include <chrono>
 #include <vector>
 
-#include "PythonWrapper.h"
+#include <../libengine/PythonWrapper.h>
 
 void pythonExecFunc();
 
 int main(int argc, const char * argv[]) {
 	
-	pythonExecFunc();
+	std::cout << sizeof(Neuron) << "\n";
+	std::cout << sizeof(NeuronalNetwork) << "\n";
+	
+//	pythonExecFunc();
 
 	return 0;
 }

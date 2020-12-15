@@ -14,9 +14,9 @@
 #include "Neuron.h"
 #include "ThreadPool.hpp"
 
-#include <vector>
-
 #include <pthread.h>
+
+#include <vector>
 
 class NeuronalNetwork
 {
