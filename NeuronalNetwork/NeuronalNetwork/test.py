@@ -7,7 +7,7 @@ import ctypes
 import sys
 
 def plot_multiple_V_vs_t(Vs, I, t, dt, arr = [16,4,1]):
-	fig, axs = plt.subplots(sum(arr), 1, sharex=True, sharey=True, figsize=(20,20))
+	fig, axs = plt.subplots(sum(arr), 1, sharex=True, sharey=True, figsize=(10,10))
 	fig.subplots_adjust(hspace=0)
 	fig.suptitle('Voltage vs Time for I=%f $\mu$A'%I)
 	fig.add_subplot(111, frameon=False)
@@ -49,9 +49,9 @@ def plot_multiple_V_vs_t(Vs, I, t, dt, arr = [16,4,1]):
 	plt.ylabel('Voltage in mV')
 #	plt.ylim(-90, 90)
 
-	ani = animation.FuncAnimation(fig, animate, len(t)//100, fargs=[Vs, t, lines], interval=200, blit=False)
-	ani.save('test.gif')
-	# plt.show()
+	# ani = animation.FuncAnimation(fig, animate, len(t)//100, fargs=[Vs, t, lines], interval=200, blit=False)
+	# ani.save('test.gif')
+	plt.show()
 	
 def plot_V_vs_t(Vs, I, t, dt):
 	plt.plot(t*dt, Vs)
@@ -61,7 +61,7 @@ def plot_V_vs_t(Vs, I, t, dt):
 	plt.ylabel('Voltage in mV')
 	plt.yticks([-65, -55, 0])
 	plt.ylim(-90,)
-	plt.xticks([x for x in range(0,len(t)//100,5)])
+	# plt.xticks([x for x in range(0,len(t)//100,5)])
 	plt.show()
 
 def update(num, Vs, t, line):
@@ -79,12 +79,13 @@ def animate(frame, Vs, t, lines):
 
 def main():
 	# input current
-	# iInput = np.random.uniform(0.01,0.05)
-	iInput = 0.100
+	# iInput = np.random.uniform(0.01,0.2)
+	iInput = 0.3
 #	5,461 total neurons
-	arr = [4096,1024,256,64,16,4,1]
-	n = 1000
-	dt = 0.01
+	# arr = [4096,1024,256,64,16,4,1]
+	arr = [7,5,3,1]
+	n = 10000
+	dt = 0.1
 	t=np.array([i for i in range(n)])
 
 	# V=-64.9964
@@ -92,15 +93,16 @@ def main():
 	# h=0.5960
 	# n=0.3177
 
-	lib = ctypes.CDLL("/Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib")
+	# lib = ctypes.CDLL("/Users/fricker/Library/Developer/Xcode/DerivedData/NeuronalNetwork-ewjdcsoexwcnzucgtoqsskdeydmw/Build/Products/Debug/libengine.dylib")
+	lib = ctypes.CDLL("libengine.so")
 	func = lib.run
 	func.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_int]
 	func.restype = ndpointer(dtype = ctypes.c_double, shape = (n * sum(arr),))
 
 	data = lib.run(iInput, dt, n, (ctypes.c_int * len(arr))(*arr), len(arr))
 	# print(data)
-	# plot_multiple_V_vs_t(data, iInput, t, dt, arr)
-#	plot_V_vs_t(data[n * (sum(arr) - 1): n * (sum(arr))], iInput, t, dt)
+	plot_multiple_V_vs_t(data, iInput, t, dt, arr)
+	# plot_V_vs_t(data[n * (sum(arr) - 1): n * (sum(arr))], iInput, t, dt)
 
 	lib.deinitialize()
 	
